@@ -8,8 +8,8 @@ if __name__ == '__main__':
 	facts = {'A'}
 	rules = [Rule('A', 'B'), Rule('A', 'Z'), Rule('B', 'C')]
 	kb = BasicKnowledgeBase(rules, facts)
-	goals = ['E', 'F']
-	kb.derive()
-	print(repr(kb))
-	# for goal in goals:
-		# print(goal + ' ' + repr(kb.query(goal)))
+	goals = ['C', 'F']
+	# kb.derive()
+	# print(repr(kb))
+	for goal in goals:
+		print(goal + ' ' + repr(kb.query(goal)))
