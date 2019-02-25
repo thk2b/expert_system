@@ -1,10 +1,25 @@
-class Atom:
+class Expression:
+    pass
+
+class Atom(Expression):
     def __init__(self, symbol):
         self.symbol = symbol
     def evaluate(self, atoms):
         return self.symbol in atoms
+    def __contains__(self, expr):
+        if isinstance(expr, Atom):
+            return expr.symbol == self.symbol
+        return False
+    def __repr__(self):
+        return "<Fact '{}'>".format(self.symbol)
+    def __str__(self):
+        return "'{}'".format(self.symbol)
 
-class BinaryExpression:
+class NotAtom(Atom):
+    def evaluate(self, atoms):
+        return not self.symbol in atoms
+
+class BinaryExpression(Expression):
     def __init__(self, right, left):
         self.left = left
         self.right = right
