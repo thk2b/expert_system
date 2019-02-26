@@ -11,16 +11,8 @@ class KnowledgeBase:
         self.rules = rules
         self.facts = facts
 
-    def _is_fact(self, expr):
-        for fact in self.facts:
-            if isinstance(fact, Atom) and isinstance(expr, Atom):
-                return fact.symbol == expr.symbol
-        return False
-
     def query(self, expr, verbose=False):
-        if self._is_fact(expr):
-            if verbose:
-                print("{} is True.".format(expr))
+        if expr.evaluate(self.facts):
             return True
         for antecedent, concequents in self.rules.items():
             for concequent in concequents:

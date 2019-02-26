@@ -1,5 +1,5 @@
 from KnowledgeBase import KnowledgeBase
-from expressions import Atom, AndExpression
+from expressions import Atom, AndExpression, NotExpression
 import unittest
 
 class TestBasicKnowledgeBase(unittest.TestCase):
@@ -43,6 +43,19 @@ class TestBasicKnowledgeBase(unittest.TestCase):
         self.assertTrue(kb.query(Atom('B')))
 
     def test_and_expression_as_antecedent(self):
+        """A + B -> C, =AB, ?ABC"""
+        rules = {
+            AndExpression(Atom('A'), Atom('B')): [Atom('C')]
+        }
+        facts = [
+            Atom('A'), Atom('B')
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertTrue(kb.query(Atom('A')))
+        self.assertTrue(kb.query(Atom('B')))
+        self.assertTrue(kb.query(Atom('C')))
+
+    def test_and_expression_as_antecedent_with_rule(self):
         """A + B -> C, A -> B, =A, ?ABC"""
         rules = {
             AndExpression(Atom('A'), Atom('B')): [Atom('C')],
