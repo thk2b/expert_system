@@ -49,10 +49,10 @@ class BinaryExpression(Expression):
         raise NotImplementedError('Must be implemented by subclass')
 
 class AndExpression(BinaryExpression):
-    def evaluate(self, kb, verbose=False):
+    def evaluate(self, kb, verbose=False): # TODO: remove verbose
         if kb.query(self.left, verbose) and kb.query(self.right, verbose):
-            if verbose:
-                print("Therefore {} is True".format(self))
+            # if verbose:
+                # print("Therefore {} is True".format(self))
             return True
 
     def __repr__(self):
