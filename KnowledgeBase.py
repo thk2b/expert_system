@@ -25,7 +25,8 @@ class KnowledgeBase:
                 if expr in concequent and self.query(antecedent, verbose):
                     if verbose:
                         print("Therefore {} is True.".format(expr))
-                    return True
+                    # return expr.evaluate(self, verbose)
+                    return True #FIXME: True antecedent entails Truth value of concequent
         return False
 
     def add_fact(self, expr):

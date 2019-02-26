@@ -33,6 +33,9 @@ class NotExpression(Expression):
     def evaluate(self, kb, verbose=False):
         return not kb.query(self.expr)
 
+    def __contains__(self, other):
+        return other in self.expr
+
     def __repr__(self):
         return "<NotExpression '{}'>".format(self.symbol)
 

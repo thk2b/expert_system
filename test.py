@@ -42,6 +42,19 @@ class TestKnowledgeBase(unittest.TestCase):
         self.assertFalse(kb.query(Atom('A')))
         self.assertTrue(kb.query(Atom('B')))
 
+    def test_false_and_expression_as_antecedent(self):
+        """A + B -> C, =A, ?ABC"""
+        rules = {
+            AndExpression(Atom('A'), Atom('B')): [Atom('C')]
+        }
+        facts = [
+            Atom('A')
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertTrue(kb.query(Atom('A')))
+        self.assertFalse(kb.query(Atom('B')))
+        self.assertFalse(kb.query(Atom('C')))
+
     def test_and_expression_as_antecedent(self):
         """A + B -> C, =AB, ?ABC"""
         rules = {
@@ -80,6 +93,18 @@ class TestKnowledgeBase(unittest.TestCase):
         self.assertTrue(kb.query(Atom('C1')))
         self.assertFalse(kb.query(Atom('C2')))
 
+    def test_false_or_expression_as_antecedent(self):
+        """A | B -> C, =, ?ABC"""
+        rules = {
+            OrExpression(Atom('A'), Atom('B')): [Atom('C')]
+        }
+        facts = [
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertFalse(kb.query(Atom('A')))
+        self.assertFalse(kb.query(Atom('B')))
+        self.assertFalse(kb.query(Atom('C')))
+
     def test_or_expression_as_antecedent(self):
         """A | B -> C, =A, ?ABC"""
         rules = {
@@ -91,20 +116,6 @@ class TestKnowledgeBase(unittest.TestCase):
         kb = KnowledgeBase(rules, facts)
         self.assertTrue(kb.query(Atom('A')))
         self.assertFalse(kb.query(Atom('B')))
-        self.assertTrue(kb.query(Atom('C')))
-
-    def test_and_expression_as_antecedent_with_rule(self):
-        """A + B -> C, A -> B, =A, ?ABC"""
-        rules = {
-            AndExpression(Atom('A'), Atom('B')): [Atom('C')],
-            Atom('A'): [Atom('B')]
-        }
-        facts = [
-            Atom('A')
-        ]
-        kb = KnowledgeBase(rules, facts)
-        self.assertTrue(kb.query(Atom('A')))
-        self.assertTrue(kb.query(Atom('B')))
         self.assertTrue(kb.query(Atom('C')))
 
     def test_or_expression_as_antecedent_with_rule(self):
@@ -121,6 +132,18 @@ class TestKnowledgeBase(unittest.TestCase):
         self.assertFalse(kb.query(Atom('C')))
         self.assertTrue(kb.query(Atom('D')))
 
+    def test_not_expression_as_antecedent(self):
+        """!A -> B, =A, ?AB"""
+        rules = {
+            NotExpression(Atom('A')): [Atom('B')],
+        }
+        facts = [
+            NotExpression(Atom('A'))
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertFalse(kb.query(Atom('A')))
+        self.assertTrue(kb.query(Atom('B')))
+
     def test_not_expression_as_concequent(self):
         """A -> !B, =A, ?AB"""
         rules = {
@@ -131,6 +154,7 @@ class TestKnowledgeBase(unittest.TestCase):
         ]
         kb = KnowledgeBase(rules, facts)
         self.assertTrue(kb.query(Atom('A')))
+        self.assertTrue(kb.query(NotExpression(Atom('B'))))
         self.assertFalse(kb.query(Atom('B')))
 
     def test_or_expression_as_concequent(self):
@@ -179,7 +203,6 @@ class TestKnowledgeBase(unittest.TestCase):
         ]
         kb = KnowledgeBase(rules, facts)
         self.assertTrue(XorExpression(Atom('B'), NotExpression('C')))
-
 
 if __name__ == '__main__':
     unittest.main()
