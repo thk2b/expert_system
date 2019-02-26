@@ -61,6 +61,18 @@ class AndExpression(BinaryExpression):
     def __str__(self):
         return "{} + {}".format(str(self.left), str(self.right))
 
+class XorExpression(BinaryExpression):
+    def evaluate(self, kb, verbose=False):
+        l = kb.query(self.left, verbose)
+        r = kb.query(self.right, verbose)
+        return l and not r or r and not l
+
+    def __repr__(self):
+        return "<XorExpression {} + {}>".format(repr(self.left), repr(self.right))
+
+    def __str__(self):
+        return "{} ^ {}".format(self.left, self.right)
+
 class OrExpression(BinaryExpression):
     def evaluate(self, kb, verbose=False):
         return kb.query(self.left, verbose) or kb.query(self.right, verbose)

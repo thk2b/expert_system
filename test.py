@@ -1,5 +1,5 @@
 from KnowledgeBase import KnowledgeBase
-from expressions import Atom, AndExpression, NotExpression, OrExpression
+from expressions import *
 import unittest
 
 class TestBasicKnowledgeBase(unittest.TestCase):
@@ -54,6 +54,20 @@ class TestBasicKnowledgeBase(unittest.TestCase):
         self.assertTrue(kb.query(Atom('A')))
         self.assertTrue(kb.query(Atom('B')))
         self.assertTrue(kb.query(Atom('C')))
+
+    def test_xor_expression_as_antecedent(self):
+        """A ^ B -> C1, A ^ A -> C2, =A, ?A C1 C2"""
+        rules = {
+            XorExpression(Atom('A'), Atom('B')): [Atom('C1')],
+            XorExpression(Atom('A'), Atom('A')): [Atom('C2')]
+        }
+        facts = [
+            Atom('A')
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertTrue(kb.query(Atom('A')))
+        self.assertTrue(kb.query(Atom('C1')))
+        self.assertFalse(kb.query(Atom('C2')))
 
     def test_or_expression_as_antecedent(self):
         """A | B -> C, =A, ?ABC"""
