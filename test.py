@@ -1,5 +1,5 @@
 from KnowledgeBase import KnowledgeBase
-from expressions import Atom, AndExpression, NotExpression
+from expressions import Atom, AndExpression, NotExpression, OrExpression
 import unittest
 
 class TestBasicKnowledgeBase(unittest.TestCase):

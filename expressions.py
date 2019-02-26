@@ -5,8 +5,11 @@ class Atom(Expression):
     def __init__(self, symbol):
         self.symbol = symbol
 
-    def evaluate(self, facts):
-        for fact in facts:
+    def evaluate(self, kb, verbose=False):
+        """
+            Evaluate whether self is true given Facts
+        """
+        for fact in kb.facts:
             if isinstance(fact, Atom): # TODO: handle other types
                 if fact.symbol == self.symbol:
                     return True
@@ -26,23 +29,44 @@ class Atom(Expression):
 class NotExpression(Expression):
     def __init__(self, expr):
         self.expr = expr
-    def evaluate(self, facts):
-        return not self.expr.evaluate(facts)
+
+    def evaluate(self, kb, verbose=False):
+        return not kb.query(self.expr)
+
+    def __repr__(self):
+        return "<NotExpression '{}'>".format(self.symbol)
+
+    def __str__(self):
+        return "!{}".format(self.expr)
 
 class BinaryExpression(Expression):
-    def __init__(self, right, left):
+    def __init__(self, left, right):
         self.left = left
         self.right = right
         self.as_tuple = (left, right)
 
-    def evaluate(self, atoms):
+    def evaluate(self, kb, verbose=False):
         raise NotImplementedError('Must be implemented by subclass')
 
 class AndExpression(BinaryExpression):
-    def evaluate(self, atoms):
-        # return kb.query(self.right) and kb.query(self.left)
-        return self.left.evaluate(atoms) and self.right.evaluate(atoms)
+    def evaluate(self, kb, verbose=False):
+        if kb.query(self.left, verbose) and kb.query(self.right, verbose):
+            if verbose:
+                print("Therefore {} is True".format(self))
+            return True
+
+    def __repr__(self):
+        return "<AndExpression {} + {}>".format(repr(self.left), repr(self.right))
+
+    def __str__(self):
+        return "{} + {}".format(str(self.left), str(self.right))
 
 class OrExpression(BinaryExpression):
-    def evaluate(self, atoms):
-        return self.left.evaluate(atoms) or self.right.evaluate(atoms)
+    def evaluate(self, kb, verbose=False):
+        return kb.query(self.left, verbose) or kb.query(self.right, verbose)
+
+    def __repr__(self):
+        return "<OrExpression {} + {}>".format(repr(self.left), repr(self.right))
+
+    def __str__(self):
+        return "{} + {}".format(self.left, self.right)

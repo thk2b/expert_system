@@ -11,15 +11,18 @@ class KnowledgeBase:
         self.rules = rules
         self.facts = facts
 
+    def evaluate(self):
+        # FIXME: evaluate belongs to KnowledgeBase, not expressions?
+        pass
+
     def query(self, expr, verbose=False):
-        if expr.evaluate(self.facts):
+        if expr.evaluate(self, verbose):
+            if verbose:
+                print("{} is True.".format(expr))
             return True
         for antecedent, concequents in self.rules.items():
             for concequent in concequents:
                 if expr in concequent and self.query(antecedent, verbose):
-                    # concequent may entail expr and antecedent is true
-                    # if concequent.evaluate(expr, self.facts):
-                        # facts and concequent entail expression
                     if verbose:
                         print("Therefore {} is True.".format(expr))
                     return True
