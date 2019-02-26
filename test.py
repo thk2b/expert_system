@@ -55,6 +55,19 @@ class TestBasicKnowledgeBase(unittest.TestCase):
         self.assertTrue(kb.query(Atom('B')))
         self.assertTrue(kb.query(Atom('C')))
 
+    def test_or_expression_as_antecedent(self):
+        """A | B -> C, =A, ?ABC"""
+        rules = {
+            OrExpression(Atom('A'), Atom('B')): [Atom('C')]
+        }
+        facts = [
+            Atom('A')
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertTrue(kb.query(Atom('A')))
+        self.assertFalse(kb.query(Atom('B')))
+        self.assertTrue(kb.query(Atom('C')))
+
     def test_and_expression_as_antecedent_with_rule(self):
         """A + B -> C, A -> B, =A, ?ABC"""
         rules = {
@@ -68,6 +81,20 @@ class TestBasicKnowledgeBase(unittest.TestCase):
         self.assertTrue(kb.query(Atom('A')))
         self.assertTrue(kb.query(Atom('B')))
         self.assertTrue(kb.query(Atom('C')))
+
+    def test_or_expression_as_antecedent_with_rule(self):
+        """A -> B, B | C -> D, =A, ?BCD"""
+        rules = {
+            Atom('A'): [Atom('B')],
+            OrExpression(Atom('B'), Atom('C')): [Atom('D')],
+        }
+        facts = [
+            Atom('A')
+        ]
+        kb = KnowledgeBase(rules, facts)
+        self.assertTrue(kb.query(Atom('B')))
+        self.assertFalse(kb.query(Atom('C')))
+        self.assertTrue(kb.query(Atom('D')))
 
     def test_or_expression_as_concequent(self):
         """A -> B | C, A -> !B, =A, ?ABC"""
