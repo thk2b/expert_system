@@ -11,7 +11,7 @@ class KnowledgeBase:
         self.rules = rules
         self.facts = facts
 
-    def evaluate(self, expr):
+    def evaluate(self, expr, verbose=False):
         """
             Given current facts, determine expr
         returns:
@@ -19,11 +19,11 @@ class KnowledgeBase:
             False otherwise
         """
         for fact in self.facts:
-            if fact.determines(expr):
-                return fact.entails(expr)
+            if fact.determines(expr, self):
+                return fact.entails(expr, self)
         return False
 
-    def infer(self, expr):
+    def infer(self, expr, verbose=False):
         """
             Given rules, determine one antecedent leading to expr
         returns:
@@ -32,31 +32,16 @@ class KnowledgeBase:
         """
         for antecedent, concequents in self.rules.items():
             for concequent in concequents:
-                if concequent.determines(expr) and self.query(antecedent, verbose):
-                    self.facts.append(antecedent)
+                if concequent.determines(expr, self) and self.query(antecedent, verbose):
+                    self.facts.append(concequent)
                     return True
         return False
 
     def query(self, expr, verbose=False): 
-        if self.evaluate(expr):
+        if self.evaluate(expr, verbose):
             return True
-        if self.infer(expr):
-            return self.evaluate(expr)
-        return False
-
-    def query(self, expr, verbose=False):
-        if expr.evaluate(self, verbose):
-            if verbose:
-                print("{} is True.".format(expr))
-            return True
-        for antecedent, concequents in self.rules.items():
-            for concequent in concequents:
-                if expr in concequent and self.query(antecedent, verbose):
-                    # self.facts.append(antecedent)
-                    if verbose:
-                        print("Therefore {} is True.".format(expr))
-                    # return expr.evaluate(self, verbose)
-                    return True #FIXME: True antecedent entails Truth value of concequent
+        if self.infer(expr, verbose):
+            return self.evaluate(expr, verbose)
         return False
 
     def add_fact(self, expr):
