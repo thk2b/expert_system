@@ -5,20 +5,60 @@ class Atom(Expression):
     def __init__(self, symbol):
         self.symbol = symbol
 
-    def evaluate(self, kb, verbose=False):
+    def determines(self, expr, kb):
         """
-            Evaluate whether self is true given Facts
+        Returns True if the truth value of self determines the truth value of expr,
+            with respect to the facts of kb, False otherwise
         """
-        for fact in kb.facts:
-            if isinstance(fact, Atom): # TODO: handle other types
-                if fact.symbol == self.symbol:
-                    return True
-        return False
-
-    def __contains__(self, expr):
         if isinstance(expr, Atom):
             return expr.symbol == self.symbol
-        return False
+        if isinstance(expr, NotExpression):
+            return self.determines(expr.expr, kb)
+        if isinstance(expr, AndExpression):
+            determines_left = self.determines(expr.left, kb)
+            determines_right = self.determines(expr.right, kb)
+            if determines_left and determines_left:
+                return True
+            if determines_left: # return True only if self entirely determines expr. Consider throwing IntedetminateError
+                return kb.query(expr.right)
+            else: #determines_right
+                return kb.query(expr.left)
+        if isinstance(expr, OrExpression):
+            return self.determines(expr.left, kb) or self.determines(expr.right, kb)
+        if isinstance(expr, XorExpression):
+            determines_left = self.determines(expr.left, kb)
+            determines_right = self.determines(expr.right, kb)
+            if determines_left and determines_right:
+                return False
+            return determines_left or determines_right
+
+    def entails(self, expr, kb):
+        """
+        Returns True if self being true entails that expr is True,
+            with respect to the facts of kb, False otherwise
+        self must determine expr
+        """
+        if isinstance(expr, Atom):
+            return expr.symbol == self.symbol
+        if isinstance(expr, NotExpression):
+            return not self.entails(expr.expr, kb)
+        if isinstance(expr, AndExpression):
+            entails_left = self.entails(expr.left, kb)
+            entails_right = self.entails(expr.right, kb)
+            if entails_left and entails_left:
+                return True
+            if entails_left: # return True only if self entirely determines expr. Consider throwing IntedetminateError
+                return kb.query(expr.right)
+            else: #entails_right
+                return kb.query(expr.left)
+        if isinstance(expr, OrExpression):
+            return self.entails(expr.left, kb) or self.entails(expr.right, kb)
+        if isinstance(expr, XorExpression):
+            entails_left = self.entails(expr.left, kb)
+            entails_right = self.entails(expr.right, kb)
+            if entails_left and entails_right:
+                return False
+            return entails_left or entails_right
 
     def __repr__(self):
         return "<Fact '{}'>".format(self.symbol)
@@ -30,11 +70,51 @@ class NotExpression(Expression):
     def __init__(self, expr):
         self.expr = expr
 
-    def evaluate(self, kb, verbose=False):
-        return not kb.query(self.expr)
+    def determines(self, expr, kb):
+        if isinstance(expr, Atom):
+            return self.expr.determines(expr, kb)
+        if isinstance(expr, NotExpression):
+            return self.expr.determines(expr.expr, kb)
+        if isinstance(expr, AndExpression):
+            determines_left = self.expr.determines(expr.left, kb)
+            determines_right = self.expr.determines(expr.right, kb)
+            if determines_left and determines_left:
+                return True
+            if determines_left: # return True only if self entirely determines expr. Consider throwing IntedetminateError
+                return kb.query(expr.right)
+            else: #determines_right
+                return kb.query(expr.left)
+        if isinstance(expr, OrExpression):
+            return self.expr.determines(expr.left, kb) or self.expr.determines(expr.right, kb)
+        if isinstance(expr, XorExpression):
+            determines_left = self.expr.determines(expr.left, kb)
+            determines_right = self.expr.determines(expr.right, kb)
+            if determines_left and determines_right:
+                return False
+            return determines_left or determines_right
 
-    def __contains__(self, other):
-        return other in self.expr
+    def entails(self, expr, kb):
+        if isinstance(expr, Atom):
+            return not self.expr.entails(expr, kb)
+        if isinstance(expr, NotExpression):
+            return not self.expr.entails(expr, kb)
+        if isinstance(expr, AndExpression):
+            entails_left = self.expr.entails(expr.left, kb)
+            entails_right = self.expr.entails(expr.right, kb)
+            if entails_left and entails_left:
+                return True
+            if entails_left:
+                return kb.query(expr.right)
+            else:
+                return kb.query(expr.left)
+        if isinstance(expr, OrExpression):
+            return self.expr.entails(expr.left, kb) or self.expr.entails(expr.right, kb)
+        if isinstance(expr, XorExpression):
+            entails_left = self.expr.entails(expr.left, kb)
+            entails_right = self.expr.entails(expr.right, kb)
+            if entails_left and entails_right:
+                return False
+            return entails_left or entails_right
 
     def __repr__(self):
         return "<NotExpression '{}'>".format(self.symbol)

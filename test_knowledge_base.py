@@ -1,4 +1,4 @@
-from KnowledgeBase import KnowledgeBase
+from knowledge_base import KnowledgeBase
 from expressions import *
 import unittest
 
