@@ -136,6 +136,42 @@ class BinaryExpression(Expression):
         raise NotImplementedError('Must be implemented by subclass')
 
 class AndExpression(BinaryExpression):
+    def determines(self, expr, kb):
+        if isinstance(expr, Atom):
+            return self.left.determines(expr, kb) or self.right.determines(expr, kb)
+        if isinstance(expr, NotExpression):
+            return self.left.determines(expr, kb) or self.right.determines(expr, kb)
+        if isinstance(expr, AndExpression):
+            left_determines_left = expr.left.determines(expr.left, kb)
+            right_determines_left = expr.right.determines(expr.left, kb)
+            left_determines_right = expr.left.determines(expr.right, kb)
+            right_determines_right = expr.right.determines(expr.right, kb)
+            if not any((left_determines_left, left_determines_right, right_determines_left, right_determines_right)):
+                return False
+            if (left_determines_left and right_determines_right) or (right_determines_left and left_determines_right):
+                return True
+            if left_determines_left or left_determines_right:
+                return kb.query(self.right)
+            else: # right_determines_left or right_determines_right
+                return kb.query(self.left)
+        if isinstance(expr, OrExpression):
+            left_determines_left = expr.left.determines(expr.left, kb)
+            if left_determines_left:
+                return kb.query(expr.right)
+            right_determines_left = expr.right.determines(expr.left, kb)
+            if right_determines_left:
+                return kb.query(expr.right)
+            left_determines_right = expr.left.determines(expr.right, kb)
+            if left_determines_right:
+                return kb.query(expr.left)
+            right_determines_right = expr.right.determines(expr.right, kb)
+            if right_determines_right:
+                return kb.query(expr.left)
+            return False
+        if isinstance(expr, XorExpression):
+            return False
+        return False
+
     def entails(self, expr, kb):
         if isinstance(expr, Atom):
             return self.left.entails(expr, kb) or self.right.entails(expr, kb)
@@ -171,17 +207,88 @@ class AndExpression(BinaryExpression):
         if isinstance(expr, XorExpression):
             return False
         return False
-            # entails_left = self.expr.entails(expr.left, kb)
-            # entails_right = self.expr.entails(expr.right, kb)
-            # if entails_left and entails_right:
-            #     return False
-            # return entails_left or entails_right
 
     def __repr__(self):
         return "<AndExpression {} + {}>".format(repr(self.left), repr(self.right))
 
     def __str__(self):
         return "{} + {}".format(str(self.left), str(self.right))
+
+class OrExpression(BinaryExpression):
+    def determines(self, expr, kb):
+        if isinstance(expr, Atom):
+            if kb.query(self.right):
+                return self.left.determines(expr)
+            if kb.query(self.left):
+                return self.right.determines(expr)
+            return False
+        if isinstance(expr, NotExpression):
+            if kb.query(self.right):
+                return self.left.determines(expr)
+            if kb.query(self.left):
+                return self.right.determines(expr)
+            return False
+        if isinstance(expr, AndExpression):
+            return False
+        if isinstance(expr, OrExpression):
+            left_determines_left = expr.left.determines(expr.left, kb)
+            if left_determines_left:
+                return kb.query(expr.right)
+            right_determines_left = expr.right.determines(expr.left, kb)
+            if right_determines_left:
+                return kb.query(expr.right)
+            left_determines_right = expr.left.determines(expr.right, kb)
+            if left_determines_right:
+                return kb.query(expr.left)
+            right_determines_right = expr.right.determines(expr.right, kb)
+            if right_determines_right:
+                return kb.query(expr.left)
+            return False
+        if isinstance(expr, XorExpression):
+            return False
+        return False
+
+    def entails(self, expr, kb):
+        if isinstance(expr, Atom):
+            return self.left.entails(expr, kb) or self.right.entails(expr, kb)
+        if isinstance(expr, NotExpression):
+            return self.left.entails(expr, kb) or self.right.entails(expr, kb)
+        if isinstance(expr, AndExpression):
+            left_entails_left = expr.left.entails(expr.left, kb)
+            right_entails_left = expr.right.entails(expr.left, kb)
+            left_entails_right = expr.left.entails(expr.right, kb)
+            right_entails_right = expr.right.entails(expr.right, kb)
+            if not any((left_entails_left, left_entails_right, right_entails_left, right_entails_right)):
+                return False
+            if (left_entails_left and right_entails_right) or (right_entails_left and left_entails_right):
+                return True
+            if left_entails_left or left_entails_right:
+                return kb.query(self.right)
+            else: # right_entails_left or right_entails_right
+                return kb.query(self.left)
+        if isinstance(expr, OrExpression):
+            left_entails_left = expr.left.entails(expr.left, kb)
+            if left_entails_left:
+                return kb.query(expr.right)
+            right_entails_left = expr.right.entails(expr.left, kb)
+            if right_entails_left:
+                return kb.query(expr.right)
+            left_entails_right = expr.left.entails(expr.right, kb)
+            if left_entails_right:
+                return kb.query(expr.left)
+            right_entails_right = expr.right.entails(expr.right, kb)
+            if right_entails_right:
+                return kb.query(expr.left)
+            return False
+        if isinstance(expr, XorExpression):
+            return False
+        return False
+
+    def __repr__(self):
+        return "<OrExpression {} + {}>".format(repr(self.left), repr(self.right))
+
+    def __str__(self):
+        return "{} + {}".format(self.left, self.right)
 
 class XorExpression(BinaryExpression):
     def evaluate(self, kb, verbose=False):
@@ -195,12 +302,3 @@ class XorExpression(BinaryExpression):
     def __str__(self):
         return "{} ^ {}".format(self.left, self.right)
 
-class OrExpression(BinaryExpression):
-    def evaluate(self, kb, verbose=False):
-        return kb.query(self.left, verbose) or kb.query(self.right, verbose)
-
-    def __repr__(self):
-        return "<OrExpression {} + {}>".format(repr(self.left), repr(self.right))
-
-    def __str__(self):
-        return "{} + {}".format(self.left, self.right)
