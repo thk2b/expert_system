@@ -1,13 +1,22 @@
-from KnowledgeBase import KnowledgeBase
-from expressions import *
+import graph
+import node
 
-if __name__ == '__main__':
-    kb = KnowledgeBase({
-        Atom('A'): [Atom('B')],
-        Atom('B'): [Atom('C')],
-        AndExpression(Atom('A'), Atom('C')): [Atom('D')]
-    }, [
-        Atom('A')
-    ])
-    # kb.query(Atom('C'), True)
-    kb.query(Atom('D'), True)
+def main():
+    # g = graph.Graph()
+    # e = g.entails(g.atom('A'), g.atom('B'))
+    # g.entails(e, g.atom('C'))
+    # print(g.eval(g.atom('C'), [g.atom('D')]))
+    # # g.entails(node.And(g.atom('A'), g.atom('B')), g.atom('C'))
+    # # print(g)
+
+    g  = graph.Graph()
+    g.entails(g.atom('A'), g.atom('B'))
+    g.entails(g.atom('A'), g.atom('C'))
+    g.entails(
+        node.And(g.atom('B'), g.atom('C')),
+        g.atom('D')
+    )
+    print(g.eval(g.atom('D'), [g.atom('A')]))
+
+if __name__ == "__main__":
+    main()
