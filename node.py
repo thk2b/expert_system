@@ -35,7 +35,8 @@ class Atom(Node):
             if i.eval(self) != INDETERMINATE:
                 self.tv = i.tv
                 return self.tv
-        raise error.IndeterminateException("{} recieved only indeterminate inputs".format(str(self)))
+        return INDETERMINATE
+        # raise error.IndeterminateException("{} recieved only indeterminate inputs".format(str(self)))
 
     def __str__(self):
         return "Atom({})[{}]".format(self.name, TV_TABLE[self.tv])

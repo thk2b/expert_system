@@ -19,7 +19,7 @@ class TestGraph(unittest.TestCase):
         g.entails(g.atom('B'), g.atom('C'))
         self.assertTrue(g.eval(g.atom('B'), []))
         self.assertTrue(g.eval(g.atom('C'), []))
-        self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('F'), []))
+        # self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('F'), []))
         del g
         g = Graph()
         g.entails(g.atom('A', tv=TRUE), g.atom('B'))
@@ -42,7 +42,7 @@ class TestGraph(unittest.TestCase):
         g = Graph()
         g.entails(g.atom('A', tv=FALSE), g.atom('B'))
         g.entails(g.atom('B'), g.atom('C'))
-        self.assertTrue(g.eval(g.atom('C'), [g.atom('A')]))
+        self.assertEqual(g.eval(g.atom('C'), [g.atom('A')]), T)
         del g
 
     def test_not_entails(self):
@@ -75,6 +75,13 @@ class TestGraph(unittest.TestCase):
             g.atom('D')
         )
         self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('D')))
+        del g
+        g = Graph()
+        g.entails(
+            IAnd(g.atom('A'), g.atom('B')),
+            g.atom('D')
+        )
+        self.assertEqual(g.eval(g.atom('D'), [g.atom('A'), g.atom('B')]), T)
 
     def test_or_entails(self):
         g = Graph()
@@ -143,6 +150,131 @@ class TestGraph(unittest.TestCase):
         ))
         self.assertEqual(g.eval(g.atom('B')), T)
 
+    def test_entails_chain_and(self):
+        g = Graph()
+        g.entails(g.atom('A'), g.atom('A1'))
+        g.entails(g.atom('A'), g.atom('A2'))
+        g.entails(g.atom('A1'), g.atom('B'))
+        g.entails(g.atom('A2'), g.atom('C'))
+        g.entails(node.IAnd(g.atom('B'), g.atom('C')), g.atom('D'))
+        self.assertEqual(g.eval(g.atom('D'), [g.atom('A')]), T)
+
+    def test_and_antecedent_and_concequent(self):
+        g = Graph()
+        g.entails(g.atom('B'), g.atom('A'))
+        g.entails(IAnd(g.atom('D'), g.atom('E')), g.atom('B'))
+        g.entails(IAnd(g.atom('G'), g.atom('H')), g.atom('F'))
+        g.entails(IAnd(g.atom('I'), g.atom('J')), g.atom('G'))
+        g.entails(g.atom('G'), g.atom('H'))
+        g.entails(IAnd(g.atom('L'), g.atom('M')), g.atom('K'))
+        g.entails(IAnd(g.atom('O', tv=FALSE), g.atom('P')), OAnd(g.atom('L'), g.atom('N')))
+        g.entails(g.atom('N'), g.atom('M'))
+        self.assertEqual(g.eval(g.atom('A'), [
+            g.atom('D'),
+            g.atom('E'),
+            g.atom('I'),
+            g.atom('J'),
+            g.atom('O'),
+            g.atom('P'),
+        ]), T)
+        self.assertEqual(g.eval(g.atom('F')), T)
+        self.assertEqual(g.eval(g.atom('P')), T)
+        self.assertEqual(g.eval(g.atom('K')), T)
+        del g
+        g = Graph()
+        g.entails(g.atom('B'), g.atom('A'))
+        g.entails(IAnd(g.atom('D'), g.atom('E')), g.atom('B'))
+        g.entails(IAnd(g.atom('G'), g.atom('H')), g.atom('F'))
+        g.entails(IAnd(g.atom('I'), g.atom('J')), g.atom('G'))
+        g.entails(g.atom('G'), g.atom('H'))
+        g.entails(IAnd(g.atom('L'), g.atom('M')), g.atom('K'))
+        g.entails(IAnd(g.atom('O', tv=FALSE), g.atom('P')), OAnd(g.atom('L'), g.atom('N')))
+        g.entails(g.atom('N'), g.atom('M'))
+        self.assertEqual(g.eval(g.atom('A'), [
+            g.atom('D'),
+            g.atom('E'),
+            g.atom('I'),
+            g.atom('J'),
+            g.atom('P'),
+        ]), T)
+        self.assertEqual(g.eval(g.atom('F')), T)
+        self.assertEqual(g.eval(g.atom('P')), T)
+        self.assertEqual(g.eval(g.atom('K')), F)
+
+    def test_or_antecedent(self):
+        def make_graph():
+            g = Graph()
+            g.entails(IAnd(g.atom('B'), g.atom('C')), g.atom('A'))
+            g.entails(IOr(g.atom('D', tv=FALSE), g.atom('E', tv=FALSE)), g.atom('B'))
+            g.entails(g.atom('B'), g.atom('C'))
+            return g
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [])
+        , F)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('D')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('E')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('D'), g.atom('E')])
+        , T)
+    
+    #XOR
+
+    def test_negations(self):
+        def make_graph():
+            g = Graph()
+            g.entails(IAnd(g.atom('B', tv=FALSE), INot(g.atom('C', tv=FALSE))), g.atom('A'))
+            return g
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [])
+        , F)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('B')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('C')])
+        , F)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('B'), g.atom('C')])
+        , F)
+
+    def test_loop(self):
+        pass
+
+    def test_multiple_rules(self):
+        def make_graph():
+            g = Graph()
+            g.entails(g.atom('B'), g.atom('A'))
+            g.entails(g.atom('C'), g.atom('A'))
+            return g
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [])
+        , I)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('B')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('C')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('B'), g.atom('C')])
+        , T)
 
 if __name__ == "__main__":
     unittest.main()
+
