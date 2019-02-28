@@ -33,7 +33,7 @@ class Atom(Node):
             if i.eval() != INDETERMINATE:
                 self.tv = i.tv
                 return self.tv
-        raise error.IndeterminateException("Atom recieved only indeterminate inputs")
+        raise error.IndeterminateException("{} recieved only indeterminate inputs".format(str(self)))
 
     def __str__(self):
         return "Atom({})[{}]".format(self.name, TV_TABLE[self.tv])
@@ -52,7 +52,8 @@ class Not(Node):
     """Represents a not node in the knowledge graph"""
     def __init__(self, input_node):
         super().__init__()
-        self.inputs[0] = input_node
+        input_node.outputs.append(self)
+        self.inputs = [input_node]
 
     def eval(self):
         """
@@ -62,7 +63,7 @@ class Not(Node):
         """
         tv = self.inputs[0].eval()
         if tv != INDETERMINATE:
-            self.tv = not tv
+            self.tv = T if tv is F else F
             return self.tv
         raise error.IndeterminateException("Not reived an indeterminate input")
 

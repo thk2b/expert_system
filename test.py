@@ -13,13 +13,13 @@ class TestGraph(unittest.TestCase):
         self.assertIs(b, g.atom('B'))
         self.assertIs(g.atom('C'), g.atom('C'))
 
-    def test_atom_entails_true(self):
+    def test_atom_entails(self):
         g = Graph()
         g.entails(g.atom('A', tv=TRUE), g.atom('B'))
         g.entails(g.atom('B'), g.atom('C'))
         self.assertTrue(g.eval(g.atom('B'), []))
         self.assertTrue(g.eval(g.atom('C'), []))
-        self.assertFalse(g.eval(g.atom('F'), []))
+        self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('F'), []))
         del g
         g = Graph()
         g.entails(g.atom('A', tv=TRUE), g.atom('B'))
@@ -37,9 +37,22 @@ class TestGraph(unittest.TestCase):
         g = Graph()
         g.entails(g.atom('A', tv=FALSE), g.atom('B'))
         g.entails(g.atom('B'), g.atom('C'))
-        self.assertTrue(g.eval(g.atom('C'), [g.atom('A')]))
-        self.assertFalse(g.eval(g.atom('C'), [g.atom('T')]))
+        self.assertEqual(g.eval(g.atom('C'), [g.atom('T')]), F)
         del g
+        g = Graph()
+        g.entails(g.atom('A', tv=FALSE), g.atom('B'))
+        g.entails(g.atom('B'), g.atom('C'))
+        self.assertTrue(g.eval(g.atom('C'), [g.atom('A')]))
+        del g
+
+    def test_not_entails(self):
+        g = Graph()
+        g.entails(Not(g.atom('A', tv=FALSE)), g.atom('B'))
+        self.assertEqual(g.eval(g.atom('B')), T)
+        del g
+        g = Graph()
+        g.entails(Not(g.atom('A', tv=TRUE)), g.atom('B'))
+        self.assertEqual(g.eval(g.atom('B')), F)
 
 if __name__ == "__main__":
     unittest.main()

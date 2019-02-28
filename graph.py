@@ -9,6 +9,7 @@ class Graph:
         Initalize graph with nodes
         """
         self.atoms = {}
+        self.locked = False
 
     def atom(self, name, *args, **kwargs):
         """
@@ -19,6 +20,8 @@ class Graph:
         if atom is None:
             atom = node.Atom(name, self, *args, **kwargs)
             self.atoms[name] = atom
+        elif kwargs.get('tv', None):
+            raise ValueError('cannot specify atom.tv when the atom already exists')
         return atom
 
     def entails(self, antecedent, concequent):
@@ -31,13 +34,20 @@ class Graph:
         concequent.inputs.append(antecedent)
         return concequent
 
+    def lock(self, facts=[]):
+        """Temporary lock to prevent contradictions in eval"""
+        if self.locked and facts:
+            raise Exception("Graph is locked")
+        self.locked = True
+        for fact in facts:
+            self.atoms[fact.name].tv = node.TRUE
+
     def eval(self, n, facts=[]):
         """
         Evaluate the truth value of node
             add node to graph and evaluate
         """
-        for fact in facts:
-            self.atoms[fact.name].tv = node.TRUE
+        self.lock(facts)
         if isinstance(n, node.Atom):
             return n.eval()
         else:
