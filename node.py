@@ -111,7 +111,7 @@ class IOr(BinaryInputNode):
                     return TRUE
             self.tv = i.tv
         if self.tv == INDETERMINATE:
-            raise error.IndeterminateException("Or reived only indeterminate inputs")
+            raise error.IndeterminateException("Or recived only indeterminate inputs")
         return FALSE
 
 class IXor(BinaryInputNode):

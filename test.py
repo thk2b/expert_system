@@ -273,6 +273,30 @@ class TestGraph(unittest.TestCase):
             g.eval(g.atom('A'), [g.atom('D'), g.atom('E')])
         , T)
 
+    def test_xor(self):
+        def make_graph(b=I, c=I):
+            g = Graph()
+            g.entails(IOr(g.atom('B'), g.atom('C')), g.atom('A'))
+            g.entails(IXor(g.atom('D', tv=F), g.atom('E', tv=F)), g.atom('B'))
+            g.entails(g.atom('B'), g.atom('C'))
+            return g
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [])
+        , F)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('B'), [g.atom('D')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('E')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('A'), [g.atom('D'), g.atom('E')])
+        , F)
+
     def test_negations(self):
         def make_graph():
             g = Graph()
