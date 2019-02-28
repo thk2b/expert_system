@@ -88,7 +88,7 @@ class And(ComposedNode):
         self.tv = TRUE
         return TRUE
 
-class Or(Node):
+class Or(ComposedNode):
     """Represents an or node in the knowledge graph"""
     def eval(self):
         """
