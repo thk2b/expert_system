@@ -105,6 +105,28 @@ class TestGraph(unittest.TestCase):
         )
         self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('D')))
 
+    def test_xor_entails(self):
+        def make_graph():
+            g = Graph()
+            g.entails(IXor(g.atom('A', tv=FALSE), g.atom('B', tv=FALSE)), g.atom('C'))
+            return g
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('C'), [])
+        , F)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('C'), [g.atom('A')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('C'), [g.atom('B')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('C'), [g.atom('A'), g.atom('B')])
+        , F)
+
     def test_and_as_concequent(self):
         g = Graph()
         g.entails(g.atom('A', tv=TRUE), OAnd(
@@ -149,6 +171,32 @@ class TestGraph(unittest.TestCase):
             g.atom('B'), g.atom('C')
         ))
         self.assertEqual(g.eval(g.atom('B')), T)
+
+    def test_xor_as_concequent(self):
+        def make_graph(a=I, b=I, c=I):
+            g = Graph()
+            g.entails(g.atom('A', tv=a), OXor(g.atom('B', tv=b), g.atom('C', tv=c)))
+            return g
+        g = make_graph(I, I, F)
+        self.assertEqual(
+            g.eval(g.atom('B'), [g.atom('A')])
+        , T)
+        g = make_graph(I, F, I)
+        self.assertEqual(
+            g.eval(g.atom('C'), [g.atom('A')])
+        , T)
+        g = make_graph(I, F, I)
+        self.assertEqual(
+            g.eval(g.atom('C'), [])
+        , I)
+        g = make_graph(F, F, I)
+        self.assertEqual(
+            g.eval(g.atom('C'), [])
+        , F)
+        g = make_graph(F, T, I)
+        self.assertEqual(
+            g.eval(g.atom('C'), [])
+        , T)
 
     def test_entails_chain_and(self):
         g = Graph()
@@ -224,8 +272,6 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(
             g.eval(g.atom('A'), [g.atom('D'), g.atom('E')])
         , T)
-    
-    #XOR
 
     def test_negations(self):
         def make_graph():

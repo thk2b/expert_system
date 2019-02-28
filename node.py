@@ -32,8 +32,9 @@ class Atom(Node):
         for i in self.inputs:
             if i.skip:
                 continue
-            if i.eval(self) != INDETERMINATE:
-                self.tv = i.tv
+            tv = i.eval(self)
+            if tv != INDETERMINATE:
+                self.tv = tv
                 return self.tv
         return INDETERMINATE
         # raise error.IndeterminateException("{} recieved only indeterminate inputs".format(str(self)))
@@ -113,6 +114,20 @@ class IOr(BinaryInputNode):
             raise error.IndeterminateException("Or reived only indeterminate inputs")
         return FALSE
 
+class IXor(BinaryInputNode):
+    def eval(self, child=None):
+        for i in (self.i1, self.i2):
+            if i.skip:
+                continue
+            if i.eval(self) == INDETERMINATE:
+                self.tv = INDETERMINATE
+                return INDETERMINATE
+        if self.i1.tv == self.i2.tv:
+            self.tv = FALSE
+        else:
+            self.tv = TRUE
+        return self.tv
+
 class ONot(Node):
     """Represents a not node in the knowledge graph"""
     def __init__(self, input_node):
@@ -157,11 +172,43 @@ class OOr(BinaryOutputNode):
             return INDETERMINATE
         self.tv = self.input.eval(self)
         if self.tv != TRUE:
+            child.tv = self.tv
             return self.tv
         other = self.o1 if child is self.o2 else self.o2
         self.skip = True
         other_tv = other.eval(None)
         self.skip = False
         if other_tv == FALSE:
+            child.tv = TRUE
             return TRUE
+        child.tv = INDETERMINATE
         return INDETERMINATE
+
+class OXor(BinaryOutputNode):
+    def eval(self, child):
+        if (child is not self.o1) and (child is not self.o2):
+            raise ValueError("Child {} is not an output node".format(child))
+        if child is None:
+            return INDETERMINATE
+        self.tv = self.input.eval(self)
+        if self.tv == INDETERMINATE:
+            child.tv = INDETERMINATE
+            return INDETERMINATE
+        other = self.o1 if child is self.o2 else self.o2
+        self.skip = True
+        other_tv = other.eval(None)
+        self.skip = False
+        if other_tv == INDETERMINATE:
+            child.tv = INDETERMINATE
+            return INDETERMINATE
+        if self.tv == TRUE:
+            if other_tv == TRUE:
+                child.tv = FALSE
+                return FALSE
+            child.tv = TRUE
+            return TRUE
+        if other_tv == TRUE:
+            child.tv = TRUE
+            return TRUE
+        child.tv = FALSE
+        return FALSE
