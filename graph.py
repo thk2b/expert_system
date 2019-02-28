@@ -1,4 +1,5 @@
 import node
+import error
 
 class Graph:
     """
@@ -24,14 +25,27 @@ class Graph:
             raise ValueError('cannot specify atom.tv when the atom already exists')
         return atom
 
+    def validate_atom(self, atom):
+        if atom.graph is not self:
+            raise error.AtomNotInGraph("{} belongs to another graph".format(atom))
+        return atom
+
     def entails(self, antecedent, concequent):
         """
         Connect antecedent and concequent
         TODO: Throws AtomNotInGraph if an atom in antecedent or
             concequent is not part of the graph
         """
-        antecedent.outputs.append(concequent)
-        concequent.inputs.append(antecedent)
+        if isinstance(antecedent, node.Atom):
+            self.validate_atom(antecedent)
+            antecedent.outputs.append(concequent) #FIXME: check if concequent is a valid atom
+        else:
+            antecedent.output = concequent
+        if isinstance(concequent, node.Atom):
+            self.validate_atom(concequent)
+            concequent.inputs.append(antecedent)
+        else:
+            concequent.input = antecedent
         return concequent
 
     def lock(self, facts=[]):

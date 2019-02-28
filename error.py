@@ -3,3 +3,6 @@ class IndeterminateException(BaseException):
 
 class ContradictionException(BaseException):
     pass
+
+class AtomNotInGraph(BaseException):
+    pass

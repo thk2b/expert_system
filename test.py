@@ -47,31 +47,31 @@ class TestGraph(unittest.TestCase):
 
     def test_not_entails(self):
         g = Graph()
-        g.entails(Not(g.atom('A', tv=FALSE)), g.atom('B'))
+        g.entails(INot(g.atom('A', tv=FALSE)), g.atom('B'))
         self.assertEqual(g.eval(g.atom('B')), T)
         del g
         g = Graph()
-        g.entails(Not(g.atom('A', tv=TRUE)), g.atom('B'))
+        g.entails(INot(g.atom('A', tv=TRUE)), g.atom('B'))
         self.assertEqual(g.eval(g.atom('B')), F)
 
     def test_and_entails(self):
         g = Graph()
         g.entails(
-            And(g.atom('A', tv=TRUE), g.atom('B', tv=TRUE), g.atom('C', tv=TRUE)),
+            IAnd(g.atom('A', tv=TRUE), g.atom('B', tv=TRUE)),
             g.atom('D')
         )
         self.assertEqual(g.eval(g.atom('D')), T)
         del g
         g = Graph()
         g.entails(
-            And(g.atom('A', tv=TRUE), g.atom('B', tv=FALSE), g.atom('C', tv=TRUE)),
+            IAnd(g.atom('A', tv=TRUE), g.atom('B', tv=FALSE)),
             g.atom('D')
         )
         self.assertEqual(g.eval(g.atom('D')), F)
         del g
         g = Graph()
         g.entails(
-            And(g.atom('A', tv=TRUE), g.atom('B'), g.atom('C', tv=TRUE)),
+            IAnd(g.atom('A', tv=TRUE), g.atom('B')),
             g.atom('D')
         )
         self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('D')))
@@ -79,24 +79,70 @@ class TestGraph(unittest.TestCase):
     def test_or_entails(self):
         g = Graph()
         g.entails(
-            Or(g.atom('A', tv=TRUE), g.atom('B', tv=FALSE), g.atom('C', tv=FALSE)),
+            IOr(g.atom('A', tv=TRUE), g.atom('B', tv=FALSE)),
             g.atom('D')
         )
         self.assertEqual(g.eval(g.atom('D')), T)
         del g
         g = Graph()
         g.entails(
-            Or(g.atom('A', tv=FALSE), g.atom('B', tv=FALSE), g.atom('C', tv=FALSE)),
+            IOr(g.atom('A', tv=FALSE), g.atom('B', tv=FALSE)),
             g.atom('D')
         )
         self.assertEqual(g.eval(g.atom('D')), F)
         del g
         g = Graph()
         g.entails(
-            Or(g.atom('A'), g.atom('B'), g.atom('C', tv=TRUE)),
+            IOr(g.atom('A'), g.atom('B')),
             g.atom('D')
         )
         self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('D')))
+
+    def test_and_as_concequent(self):
+        g = Graph()
+        g.entails(g.atom('A', tv=TRUE), OAnd(
+            g.atom('B'), g.atom('C')
+        ))
+        self.assertEqual(g.eval(g.atom('B')), T)
+        del g
+        g = Graph()
+        g.entails(g.atom('A', tv=FALSE), OAnd(
+            g.atom('B'), g.atom('C')
+        ))
+        self.assertEqual(g.eval(g.atom('B')), F)
+        del g
+
+    def test_not_as_concequent(self):
+        g = Graph()
+        g.entails(g.atom('A', tv=TRUE), ONot(g.atom('C')))
+        self.assertEqual(g.eval(g.atom('C')), F)
+
+    def test_or_as_concequent(self):
+        g = Graph()
+        g.entails(g.atom('A', tv=FALSE), OOr(
+            g.atom('B'), g.atom('C')
+        ))
+        self.assertEqual(g.eval(g.atom('B')), F)
+        del g
+        g = Graph()
+        g.entails(g.atom('A', tv=T), OOr(
+            g.atom('B'), g.atom('C', tv=F)
+        ))
+        self.assertEqual(g.eval(g.atom('B')), T)
+        del g
+        g = Graph()
+        g.entails(g.atom('A', tv=T), OOr(
+            g.atom('B'), g.atom('C', tv=T)
+        ))
+        self.assertRaises(IndeterminateException, lambda: g.eval(g.atom('B')))
+        del g
+        g = Graph()
+        g.entails(g.atom('A', tv=T), ONot(g.atom('C')))
+        g.entails(g.atom('A'), OOr(
+            g.atom('B'), g.atom('C')
+        ))
+        self.assertEqual(g.eval(g.atom('B')), T)
+
 
 if __name__ == "__main__":
     unittest.main()
