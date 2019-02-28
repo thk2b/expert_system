@@ -4,11 +4,11 @@ class Graph:
     """
     Represents a knowledge graph
     """
-    def __init__(self, atoms={}):
+    def __init__(self):
         """
         Initalize graph with nodes
         """
-        self.atoms = atoms
+        self.atoms = {}
 
     def atom(self, name, *args, **kwargs):
         """

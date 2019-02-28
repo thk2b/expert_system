@@ -16,7 +16,7 @@ def main():
         node.And(g.atom('B'), g.atom('C')),
         g.atom('D')
     )
-    print(g.eval(g.atom('D'), [g.atom('A')]))
+    print(g.eval(g.atom('D'), []))
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,7 @@ TV_TABLE = {I:'I', T:'T', F:'F'}
 
 class Node:
     """Represents a basic node in the knowledge graph"""
-    def __init__(self):
+    def __init__(self, tv=INDETERMINATE):
         """
         Args:
             input is a set of references to dependency nodes:
@@ -18,14 +18,13 @@ class Node:
         """
         self.inputs = []
         self.outputs = []
-        self.tv = INDETERMINATE
+        self.tv = tv
 
 class Atom(Node):
     def __init__(self, name, graph, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.name = name
         self.graph = graph
-        pass
 
     def eval(self):
         if self.tv != INDETERMINATE:
@@ -41,7 +40,7 @@ class Atom(Node):
 
 class ComposedNode(Node):
     def __init__(self, *inputs, **kwargs):
-        super().__init__()
+        super().__init__(**kwargs)
         self.inputs = list(inputs)
         for i in inputs:
             i.outputs.append(self)
