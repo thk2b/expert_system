@@ -20,6 +20,7 @@ class Node:
 class Atom(Node):
     def __init__(self, name, graph, tv=INDETERMINATE):
         super().__init__()
+        self.original_tv = tv if tv is not INDETERMINATE else None
         self.tv = tv
         self.name = name
         self.graph = graph

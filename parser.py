@@ -3,7 +3,7 @@ import graph as g
 
 """
 Grammar
-    File                = Rules Statements Queries File
+    Session                = Rules Statements Queries Session
                         | EOF
     Rules               = Rule Rules
                         | NotRule
@@ -53,12 +53,15 @@ The following terminals must be defined
     LIST_SEPARATOR  ,
 """
 
-def parse_file(filename):
+def execute_file(filename):
     """
     Parse a file and execute queries
         parse rules
         parse 
     """
+    pass
+
+def execute_interactive():
     pass
 
 def parse_line(graph, line):

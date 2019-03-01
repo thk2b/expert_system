@@ -51,9 +51,12 @@ class Graph:
         return concequent
 
     def close(self, facts=[]):
-        """Temporary lock to prevent contradictions in eval"""
+        """
+        Close the graph. 
+        Set all leaf atoms to false if indeterminate, set all atoms in facts to true.
+        """
         if self.closed and facts:
-            raise Exception("Graph is locked")
+            raise Exception("Graph is closed")
         self.closed = True
         for fact in facts:
             self.atoms[fact.name].tv = node.TRUE
@@ -67,11 +70,30 @@ class Graph:
             add node to graph and evaluate
         """
         self.close(facts)
-        # if isinstance(n, node.Atom):
         return n.eval()
-        # else:
-        #     raise NotImplementedError()
+
+    def reset(self):
+        """
+        Reset facts to their orignial truth value or indeterminate
+        """
+        for atom in self.atoms.values():
+            atom.tv = atom.original_tv or node.INDETERMINATE
+        self.closed = False
+
+    def suppose(self, facts=[]):
+        return Session(self, facts)
 
     def __str__(self):
         strs = [str(atom) for atom in self.atoms.values()]
         return "Graph({})".format(strs)
+
+class Session:
+    def __init__(self, graph, facts):
+        self.graph = graph
+        self.facts = facts
+
+    def __enter__(self):
+        self.graph.close(self.facts)
+
+    def __exit__(self, *args):
+        self.graph.reset()
