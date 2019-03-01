@@ -8,19 +8,19 @@ TV_TABLE = {I:'I', T:'T', F:'F'}
 
 class Node:
     """Represents a basic node in the knowledge graph"""
-    def __init__(self, tv=INDETERMINATE):
+    def __init__(self):
         """
         Args:
         """
-        self.tv = tv
         self.skip = False
 
     def __str__(self):
         return "{}()".format(self.__class__.__name__)
 
 class Atom(Node):
-    def __init__(self, name, graph, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, name, graph, tv=INDETERMINATE):
+        super().__init__()
+        self.tv = tv
         self.name = name
         self.graph = graph
         self.inputs = []
@@ -37,7 +37,6 @@ class Atom(Node):
                 self.tv = tv
                 return self.tv
         return INDETERMINATE
-        # raise error.IndeterminateException("{} recieved only indeterminate inputs".format(str(self)))
 
     def __str__(self):
         return "Atom({})[{}]".format(self.name, TV_TABLE[self.tv])
@@ -58,9 +57,8 @@ class INot(Node):
         """
         tv = self.input.eval(self)
         if tv != INDETERMINATE:
-            self.tv = T if tv is F else F
-            return self.tv
-        raise error.IndeterminateException("Not reived an indeterminate input")
+            return T if tv is F else F
+        return INDETERMINATE
 
 class BinaryInputNode(Node):
     """
@@ -74,44 +72,25 @@ class BinaryInputNode(Node):
 class IAnd(BinaryInputNode):
     """Represents an and node in the knowledge graph"""
     def eval(self, child=None):
-        """
-        Evaluate the truth value of this node
-            if node is not indeterminate return self.tv
-            all(
-                for each node in self.input if node is not indeterminate return node.tv
-            )
-        """
         for i in (self.i1, self.i2):
             if i.skip:
                 continue
-            if i.eval(self) == INDETERMINATE:
-                raise error.IndeterminateException("And reived an indeterminate inputs")
-            if i.tv == FALSE:
-                self.tv = FALSE
+            tv = i.eval(self)
+            if tv == INDETERMINATE:
+                return INDETERMINATE
+            if tv == FALSE:
                 return FALSE
-        self.tv = TRUE
         return TRUE
 
 class IOr(BinaryInputNode):
     """Represents an or node in the knowledge graph"""
     def eval(self, child=None):
-        """
-        Evaluate the truth value of this node
-            if node is not indeterminate return self.tv
-            any(
-                for each node in self.input if node is not indeterminate return node.tv
-            )
-        """
         for i in (self.i1, self.i2):
             if i.skip:
                 continue
-            if i.eval(self) != INDETERMINATE:
-                if i.tv == TRUE:
-                    self.tv = TRUE
-                    return TRUE
-            self.tv = i.tv
-        if self.tv == INDETERMINATE:
-            raise error.IndeterminateException("Or recived only indeterminate inputs")
+            tv = i.eval(self)
+            if tv == TRUE:
+                return TRUE
         return FALSE
 
 class IXor(BinaryInputNode):
@@ -119,14 +98,12 @@ class IXor(BinaryInputNode):
         for i in (self.i1, self.i2):
             if i.skip:
                 continue
-            if i.eval(self) == INDETERMINATE:
-                self.tv = INDETERMINATE
+            tv = i.eval(self)
+            if tv == INDETERMINATE:
                 return INDETERMINATE
         if self.i1.tv == self.i2.tv:
-            self.tv = FALSE
-        else:
-            self.tv = TRUE
-        return self.tv
+            return FALSE
+        return TRUE
 
 class ONot(Node):
     """Represents a not node in the knowledge graph"""
@@ -137,16 +114,10 @@ class ONot(Node):
         self.input = None
 
     def eval(self, child=None):
-        """
-        Evaluate the truth value of this node
-            if node is not indeterminate return self.tv
-            for each node in self.input if node is not indeterminate return not node.tv
-        """
         tv = self.input.eval(self)
         if tv != INDETERMINATE:
-            self.tv = T if tv is F else F
-            return self.tv
-        raise error.IndeterminateException("Not reived an indeterminate input")
+            return T if tv is F else F
+        return INDETERMINATE
 
 class BinaryOutputNode(Node):
     """
@@ -161,8 +132,7 @@ class BinaryOutputNode(Node):
 
 class OAnd(BinaryOutputNode):
     def eval(self, child):
-        self.tv = self.input.eval(self)
-        return self.tv
+        return self.input.eval(self)
 
 class OOr(BinaryOutputNode):
     def eval(self, child):
@@ -170,10 +140,11 @@ class OOr(BinaryOutputNode):
             raise ValueError("Child {} is not an output node".format(child))
         if child is None:
             return INDETERMINATE
-        self.tv = self.input.eval(self)
-        if self.tv != TRUE:
-            child.tv = self.tv
-            return self.tv
+        tv = self.input.eval(self)
+        if tv != TRUE:
+            if isinstance(child, Atom):
+                child.tv = tv
+            return tv
         other = self.o1 if child is self.o2 else self.o2
         self.skip = True
         other_tv = other.eval(None)
@@ -181,7 +152,8 @@ class OOr(BinaryOutputNode):
         if other_tv == FALSE:
             child.tv = TRUE
             return TRUE
-        child.tv = INDETERMINATE
+        if isinstance(child, Atom):
+            child.tv = INDETERMINATE
         return INDETERMINATE
 
 class OXor(BinaryOutputNode):
@@ -190,9 +162,10 @@ class OXor(BinaryOutputNode):
             raise ValueError("Child {} is not an output node".format(child))
         if child is None:
             return INDETERMINATE
-        self.tv = self.input.eval(self)
-        if self.tv == INDETERMINATE:
-            child.tv = INDETERMINATE
+        tv = self.input.eval(self)
+        if tv == INDETERMINATE:
+            if isinstance(child, Atom):
+                child.tv = INDETERMINATE
             return INDETERMINATE
         other = self.o1 if child is self.o2 else self.o2
         self.skip = True
@@ -201,14 +174,17 @@ class OXor(BinaryOutputNode):
         if other_tv == INDETERMINATE:
             child.tv = INDETERMINATE
             return INDETERMINATE
-        if self.tv == TRUE:
+        if tv == TRUE:
             if other_tv == TRUE:
-                child.tv = FALSE
+                if isinstance(child, Atom):
+                    child.tv = FALSE
                 return FALSE
             child.tv = TRUE
             return TRUE
         if other_tv == TRUE:
-            child.tv = TRUE
+            if isinstance(child, Atom):
+                child.tv = TRUE
             return TRUE
-        child.tv = FALSE
+        if isinstance(child, Atom):
+            child.tv = FALSE
         return FALSE

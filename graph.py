@@ -55,6 +55,9 @@ class Graph:
         self.locked = True
         for fact in facts:
             self.atoms[fact.name].tv = node.TRUE
+        for atom in set(self.atoms.values()).difference(set(facts)):
+            if len(atom.inputs) == 0 and atom.tv == node.INDETERMINATE:
+                atom.tv = node.FALSE
 
     def eval(self, n, facts=[]):
         """
