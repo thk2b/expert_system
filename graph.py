@@ -67,10 +67,10 @@ class Graph:
             add node to graph and evaluate
         """
         self.close(facts)
-        if isinstance(n, node.Atom):
-            return n.eval()
-        else:
-            raise NotImplementedError()
+        # if isinstance(n, node.Atom):
+        return n.eval()
+        # else:
+        #     raise NotImplementedError()
 
     def __str__(self):
         strs = [str(atom) for atom in self.atoms.values()]

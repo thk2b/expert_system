@@ -347,7 +347,31 @@ class TestGraph(unittest.TestCase):
         def make_graph():
             g = Graph()
             g.entails(g.atom('A'), g.atom('B'))
-        self.assertEqual()
+            return g
+        g = make_graph()
+        self.assertEqual(g.eval(IAnd(g.atom('A'), g.atom('B'))), F)
+        g = make_graph()
+        self.assertEqual(g.eval(IAnd(g.atom('A'), g.atom('B')), [g.atom('A')]), T)
+
+    def test_eval_or(self):
+        g = Graph()
+        self.assertEqual(g.eval(IOr(g.atom('A'), g.atom('B'))), F)
+        g = Graph()
+        self.assertEqual(g.eval(IOr(g.atom('A'), g.atom('B')), [g.atom('A')]), T)
+        g = Graph()
+        self.assertEqual(g.eval(IOr(g.atom('A'), g.atom('B')), [g.atom('B')]), T)
+        g = Graph()
+        self.assertEqual(g.eval(IOr(g.atom('A'), g.atom('B')), [g.atom('A'), g.atom('B')]), T)
+
+    def test_eval_xor(self):
+        g = Graph()
+        self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B'))), F)
+        g = Graph()
+        self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('A')]), T)
+        g = Graph()
+        self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('B')]), T)
+        g = Graph()
+        self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('A'), g.atom('B')]), F)
 
 if __name__ == "__main__":
     unittest.main()
