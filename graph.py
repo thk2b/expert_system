@@ -36,6 +36,8 @@ class Graph:
         TODO: Throws AtomNotInGraph if an atom in antecedent or
             concequent is not part of the graph
         """
+        if antecedent is concequent:
+            raise ValueError('concequent must be different than antecedent')
         if isinstance(antecedent, node.Atom):
             self.validate_atom(antecedent)
             antecedent.outputs.append(concequent) #FIXME: check if concequent is a valid atom

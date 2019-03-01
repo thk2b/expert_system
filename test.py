@@ -159,8 +159,7 @@ class TestGraph(unittest.TestCase):
         g.entails(node.IAnd(g.atom('B'), g.atom('C')), g.atom('D'))
         self.assertEqual(g.eval(g.atom('D'), [g.atom('A')]), T)
 
-    def test_and_antecedent_and_concequent(self):
-        #TODO: refactor
+    def test_and_antecedent_and_concequent(self): #TODO: refactor
         g = Graph()
         g.entails(g.atom('B'), g.atom('A'))
         g.entails(IAnd(g.atom('D'), g.atom('E')), g.atom('B'))
@@ -249,7 +248,8 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.eval(g.atom('A'), [g.atom('B'), g.atom('C')]), F)
 
     def test_loop(self):
-        pass
+        g = Graph()
+        self.assertRaises(ValueError, lambda: g.entails(g.atom('A'), g.atom('A')))
 
     def test_multiple_rules(self):
         def make_graph():
@@ -266,6 +266,51 @@ class TestGraph(unittest.TestCase):
         g = make_graph()
         self.assertEqual(g.eval(g.atom('A'), [g.atom('B'), g.atom('C')]), T)
 
+    def test_nested_and_or(self):
+        def make_graph():
+            g = Graph()
+            g.entails(
+                IOr(g.atom('A'), g.atom('C')),
+                ONot(g.atom('E'))
+            )
+            g.entails(
+                IOr(
+                    IAnd(g.atom('A'), g.atom('B')),
+                    g.atom('C')
+                ),
+                OOr(
+                    g.atom('D'),
+                    g.atom('E')
+                )
+            )
+            return g
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('D'), [g.atom('A'), g.atom('B')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('D'), [g.atom('C')])
+        , T)
+        g = make_graph()
+        self.assertEqual(
+            g.eval(g.atom('D'), [])
+        , F)
+
+    def test_not_and_not_and(self):
+        def make_graph():
+            g = Graph()
+            g.entails(
+                INot(IAnd(g.atom('A'), g.atom('B'))),
+                ONot(OAnd(g.atom('C'), g.atom('D')))
+            )
+            return g
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('C')), F)
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('C'), [g.atom('A'), g.atom('B')]), T)
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('C'), [g.atom('A')]), F)
+
 if __name__ == "__main__":
     unittest.main()
-

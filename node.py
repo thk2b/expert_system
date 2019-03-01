@@ -45,7 +45,10 @@ class INot(Node):
     """Represents a not node in the knowledge graph"""
     def __init__(self, input_node):
         super().__init__()
-        input_node.outputs.append(self)
+        if isinstance(input_node, Atom):
+            input_node.outputs.append(self)
+        else:
+            input_node.output = self
         self.input = input_node
         self.output = None
 
@@ -107,10 +110,13 @@ class IXor(BinaryInputNode):
 
 class ONot(Node):
     """Represents a not node in the knowledge graph"""
-    def __init__(self, input_node):
+    def __init__(self, output_node):
         super().__init__()
-        input_node.inputs.append(self)
-        self.output = input_node
+        if isinstance(output_node, Atom):
+            output_node.inputs.append(self)
+        else:
+            output_node.input = self
+        self.output = output_node
         self.input = None
 
     def eval(self, child=None):
