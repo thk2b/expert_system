@@ -311,6 +311,43 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.eval(g.atom('C'), [g.atom('A'), g.atom('B')]), T)
         g = make_graph()
         self.assertEqual(g.eval(g.atom('C'), [g.atom('A')]), F)
+    
+    def test_nested_oand(self):
+        def make_graph():
+            g = Graph()
+            g.entails(g.atom('A'),
+                OAnd(
+                    OAnd(g.atom('B'), g.atom('C')),
+                    g.atom('D')
+                )
+            )
+            return g
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('B')), F)
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('B'), [g.atom('A')]), T)
+
+    def test_nested_oor(self):
+        def make_graph():
+            g = Graph()
+            g.entails(g.atom('A'),
+                OOr(
+                    OOr(g.atom('B'), g.atom('C')),
+                    g.atom('D')
+                )
+            )
+            g.entails(g.atom('A'), ONot(OAnd(g.atom('C'), g.atom('D'))))
+            return g
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('B'), [g.atom('A')]), T)
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('B'), []), F)
+
+    def test_eval_and(self):
+        def make_graph():
+            g = Graph()
+            g.entails(g.atom('A'), g.atom('B'))
+        self.assertEqual()
 
 if __name__ == "__main__":
     unittest.main()

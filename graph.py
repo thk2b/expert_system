@@ -10,7 +10,7 @@ class Graph:
         Initalize graph with nodes
         """
         self.atoms = {}
-        self.locked = False
+        self.closed = False
 
     def atom(self, name, *args, **kwargs):
         """
@@ -50,11 +50,11 @@ class Graph:
             concequent.input = antecedent
         return concequent
 
-    def lock(self, facts=[]):
+    def close(self, facts=[]):
         """Temporary lock to prevent contradictions in eval"""
-        if self.locked and facts:
+        if self.closed and facts:
             raise Exception("Graph is locked")
-        self.locked = True
+        self.closed = True
         for fact in facts:
             self.atoms[fact.name].tv = node.TRUE
         for atom in set(self.atoms.values()).difference(set(facts)):
@@ -66,7 +66,7 @@ class Graph:
         Evaluate the truth value of node
             add node to graph and evaluate
         """
-        self.lock(facts)
+        self.close(facts)
         if isinstance(n, node.Atom):
             return n.eval()
         else:

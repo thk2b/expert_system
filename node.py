@@ -132,8 +132,11 @@ class BinaryOutputNode(Node):
     def __init__(self, o1, o2, **kwargs):
         super().__init__(**kwargs)
         self.o1, self.o2 = o1, o2
-        o1.inputs.append(self)
-        o2.inputs.append(self)
+        for o in (o1, o2):
+            if isinstance(o, Atom):
+                o.inputs.append(self)
+            else:
+                o.input = self
         self.input = None
 
 class OAnd(BinaryOutputNode):
