@@ -1,7 +1,6 @@
 import node as node
 import graph as graph
-from pushback_iter import pushback_iter
-from strip_comment_iter import strip_comment_iter
+
 import collections
 
 """
@@ -63,59 +62,35 @@ terminals = {
     "RPAREN":           ")",
 }
 
-def execute_file(filename):
-    """
-    Parse a file and execute queries
-        parse rules
-        parse 
-    """
-    g = graph.Graph()
-    with open(filename, 'r') as file:
-        pb_file = pushback_iter(strip_comment_iter(file))
-        while True:
-            try:
-                execute_session(g, pb_file)
-            except EOFError:
-                break
-
-def execute_session(g, file):
-    """
-    Read rules and add to the graph
-    Read statements and close the graph
-    Execute queries and reset the graph
-    Execute a session from the file
-    """
-    parse_rules(g, file)
-    statements = parse_statements(g, file)
-    with g.suppose(statements):
-        for query in parse_queries(g, file):
-            print("{}: {}".format(query, g.eval(query)))
-
 def parse_rules(g, file):
     for line in file:
         if parse_rule(g, line):
             continue
         file.push(line)
-        return file
+        return
     raise EOFError()
 
 def parse_rule(g, line):
     if terminals["ENTAILS"] in line:
         l, r = map(lambda s: s.strip(), line.split(terminals["ENTAILS"]))
+        if not r:
+            raise SyntaxError('Expected concequent')
         g.entails(parse_expr(g, l, True), parse_expr(g, r, False))
         return True
     return None
 
 def parse_statements(g, file):
     statements = collections.deque()
+    got_valid_statement = False
     for line in file:
         statement_list = parse_statement(g, line)
         if statement_list is not None:
+            got_valid_statement = True
             for statement in statement_list:
                 statements.append(statement)
         else:
             file.push(line)
-            return statements
+            return statements if got_valid_statement else None
     raise EOFError()
 
 def parse_queries(g, file):
@@ -211,6 +186,3 @@ def parse_atom_expr(g, s, is_input):
     if not a[0].isalnum():
         raise SyntaxError('Invalid character in Atom: {}'.format(a[0]))
     return g.atom(a[0].strip())
-
-if __name__ == '__main__':
-    execute_file('a.exp')

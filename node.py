@@ -49,7 +49,7 @@ class Atom(Node):
         return self.tv
 
     def __str__(self):
-        return "Atom({})[{}]".format(self.name, TV_TABLE[self.tv])
+        return self.name
 
 class INot(Node):
     """Represents a not node in the knowledge graph"""
