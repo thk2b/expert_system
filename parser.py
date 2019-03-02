@@ -202,7 +202,7 @@ def parse_atom_expr(g, s, is_input):
     if s[0] == terminals['LPAREN']:
         if s[-1] != terminals['RPAREN']:
             raise SyntaxError('Unmatched LPAREN')
-        return parse_expr(s[1:-2])
+        return parse_expr(g, s[1:-1], is_input)
     if (len(s) == 0):
         raise SyntaxError('Empty Atom')
     a = s.split()
