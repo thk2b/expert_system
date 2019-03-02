@@ -1,6 +1,7 @@
 import node as node
 import graph as graph
 from pushback_iter import pushback_iter
+from strip_comment_iter import strip_comment_iter
 import collections
 
 """
@@ -70,8 +71,12 @@ def execute_file(filename):
     """
     g = graph.Graph()
     with open(filename, 'r') as file:
-        pb_file = pushback_iter(file)
-        execute_session(g, pb_file)
+        pb_file = pushback_iter(strip_comment_iter(file))
+        while True:
+            try:
+                execute_session(g, pb_file)
+            except EOFError:
+                break
 
 def execute_session(g, file):
     """
@@ -91,33 +96,36 @@ def parse_rules(g, file):
         if parse_rule(g, line):
             continue
         file.push(line)
-        return
+        return file
+    raise EOFError()
 
 def parse_rule(g, line):
     if terminals["ENTAILS"] in line:
         l, r = map(lambda s: s.strip(), line.split(terminals["ENTAILS"]))
         g.entails(parse_expr(g, l, True), parse_expr(g, r, False))
         return True
-    return False
+    return None
 
 def parse_statements(g, file):
     statements = collections.deque()
     for line in file:
         statement_list = parse_statement(g, line)
-        if statement:
+        if statement_list:
             statements.append(*statement_list)
         else:
             file.push(line)
-    return statements
+            return statements
+    raise EOFError()
 
 def parse_queries(g, file):
     for line in file:
         query = parse_query(g, line)
         if query is None:
             file.push(line)
-            break
+            return
         for expr in query:
             yield expr
+    raise EOFError()
 
 def parse_statement(g, line):
     """Parse statement facts"""

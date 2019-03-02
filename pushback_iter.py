@@ -11,7 +11,7 @@ class pushback_iter:
     def __next__(self):
         if len(self.buffer):
             return self.buffer.pop()
-        return self.it.__next__()
+        return next(self.it)
 
     def __iter__(self):
         return self

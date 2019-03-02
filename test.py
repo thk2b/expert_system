@@ -493,6 +493,10 @@ class TestParseStatement(unittest.TestCase):
         g = Graph()
         self.assertIsNone(parse_statement(g, "ABC"))
 
+    def test_empty_statement(self):
+        g = Graph()
+        self.assertIsNone(parse_statement(g, "="))
+
     def test_compact_atom_list(self):
         g = Graph()
         self.assertEqual(parse_statement(g, "=A       BC"), [
