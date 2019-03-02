@@ -432,6 +432,39 @@ class TestParseRule(unittest.TestCase):
         with g.suppose([]):
             self.assertEqual(g.eval(g.atom('CC')), F)
 
+    def test_atom_entails_xor(self):
+        g = Graph()
+        parse_rule(g, "  AA  ->     BB  ^   CC   ")
+        with g.suppose([g.atom('AA'), g.atom('BB')]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+
+    def test_atom_entails_and(self):
+        g = Graph()
+        parse_rule(g, "  AA ->   BB  +   CC   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('CC')), T)
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('BB')), T)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+
+    def test_atom_entails_or(self):
+        g = Graph()
+        parse_rule(g, "  AA     ->   BB  |   CC   ")
+        parse_rule(g, "  AA     ->   !  CC   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('BB')), T)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+
+    def test_not_entails_not(self):
+        g = Graph()
+        parse_rule(g, "  !  AA  ->   ! BB   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('BB')), T)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('BB')), F)
+
     def test_not_entails_atom(self):
         g = Graph()
         parse_rule(g, "  !  AA  ->   BB   ")
