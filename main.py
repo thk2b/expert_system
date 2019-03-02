@@ -5,7 +5,7 @@ import argparse
 
 def main(args):
     if len(args.filenames) == 0:
-        return execute_interactive()
+        return execute_interactive(args.verbose)
     for filename in args.filenames:
         print(filename, end=':\n')
         execute_file(filename, args.verbose)

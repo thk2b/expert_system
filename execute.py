@@ -7,7 +7,7 @@ from node import tv_to_str
 
 PROMPT = 'e> '
 
-def execute_file(filename, verbose):
+def execute_file(filename, verbose=False):
     """
     Parse a file and execute queries
         parse rules
@@ -15,13 +15,13 @@ def execute_file(filename, verbose):
     """
     g = graph.Graph()
     with open(filename, 'r') as file:
-        execute_sessions(g, file, verbose)
+        execute_sessions(g, file, False, verbose)
 
-def execute_interactive():
+def execute_interactive(verbose=False):
     g = graph.Graph()
     while True:
         try:
-            execute_sessions(g, sys.stdin, True)
+            execute_sessions(g, sys.stdin, True, verbose)
         except KeyboardInterrupt:
             break
         except EOFError:
@@ -29,15 +29,15 @@ def execute_interactive():
         except Exception as e:
             print('ERROR: ', e) #FIXME: Make sure errors don't mess up the graph
 
-def execute_sessions(g, file, interactive=False):
+def execute_sessions(g, file, interactive=False, verbose=False):
     pb_file = pushback_iter(preprocess_iter(file, PROMPT if interactive else None))
     while True:
         try:
-            execute_session(g, pb_file, interactive)
+            execute_session(g, pb_file, verbose)
         except EOFError:
             break
 
-def execute_session(g, file, interactive=False):
+def execute_session(g, file, verbose=False):
     """
     Read rules and add to the graph
     Read statements and close the graph
@@ -52,7 +52,11 @@ def execute_session(g, file, interactive=False):
     with g.suppose(statements):
         for query in parser.parse_queries(g, file):
             got_query = True
-            print("therefore {} is {}".format(query, tv_to_str(g.eval(query, verbose=interactive))))
+            tv = tv_to_str(g.eval(query, verbose=verbose))
+            if verbose:
+                print("therefore {} is {}".format(query, tv))
+            else:
+                print("{}: {}".format(query, tv))
 
 if __name__ == '__main__':
     execute_file('a.exp')
