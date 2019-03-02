@@ -9,15 +9,11 @@ Grammar
                         | EOF
     Session             = Rules Statements Queries
     Rules               = Rule Rules
-                        | NotRule
+                        | NULL
     Statements          = Statement Statements
-                        | NotStatement
+                        | NULL
     Queries             = Query Queries
-                        | NotQuery
-
-    Line                = Rule      NEWLINE
-                        | Statement NEWLINE
-                        | Query     NEWLINE
+                        | NULL
 
     Rule                = Expression ENTAILS Expression
     Statement           = ASSERT AtomList

@@ -39,10 +39,10 @@ def execute_sessions(g, file, interactive=False, verbose=False):
 
 def execute_session(g, file, verbose=False):
     """
-    Read rules and add to the graph
-    Read statements and close the graph
-    Execute queries and reset the graph
     Execute a session from the file
+        Read rules and add to the graph
+        Read statements and close the graph
+        Read and execute queries and reset the graph
     """
     parser.parse_rules(g, file)
     statements = parser.parse_statements(g, file)
