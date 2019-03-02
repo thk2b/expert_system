@@ -1,6 +1,7 @@
 from graph import *
 from node import *
 from error import *
+from parser import *
 import unittest
 
 class TestGraph(unittest.TestCase):
@@ -372,6 +373,82 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('B')]), T)
         g = Graph()
         self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('A'), g.atom('B')]), F)
+
+class TestSplit(unittest.TestCase):
+    def test_basic(self):
+        self.assertEqual(split("ab cd ef", "cd"), ("ab", "ef"))
+        self.assertEqual(split("ab c d ef", "cd"), (None, None))
+        self.assertEqual(split("ab cd ef cd", "cd"), ("ab", "ef cd"))
+        self.assertEqual(split("     ab   cd     ef  ", "cd"), ("ab", "ef"))
+
+    def test_parens(self):
+        self.assertEqual(
+            split("ab {} cd {} ef".format(terminals['LPAREN'], terminals['RPAREN']), "cd"),
+            (None, None)
+        )
+        self.assertEqual(
+            split("ab {}{} cd {}{} cd ef".format(terminals['LPAREN'], terminals['LPAREN'], terminals['RPAREN'], terminals['RPAREN']), "cd"),
+            ("ab {}{} cd {}{}".format(terminals['LPAREN'], terminals['LPAREN'], terminals['RPAREN'], terminals['RPAREN']), "ef")
+        )
+
+    def test_invalid_parens(self):
+        self.assertRaises(SyntaxError, lambda: split("()(()", "a"))
+        self.assertRaises(SyntaxError, lambda: split("())()", "a"))
+        split("((())())", "a")
+
+class TestParseRule(unittest.TestCase):
+    def test_atom_entails_atom(self):
+        g = Graph()
+        parse_rule(g, "  AA  ->   BB   ")
+        self.assertEqual(g.eval(g.atom('BB'), [g.atom('AA')]), T)
+        self.assertRaises(SyntaxError, lambda: parse_rule(g, "  A A  ->   BB   "))
+
+    def test_xor_entails_atom(self):
+        g = Graph()
+        parse_rule(g, "  AA     ^   BB  ->   CC   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('CC')), T)
+        with g.suppose([g.atom('AA'), g.atom('BB')]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+        self.assertRaises(SyntaxError, lambda: parse_rule(g, "  A^^A  ->   BB   "))
+
+    def test_and_entails_atom(self):
+        g = Graph()
+        parse_rule(g, "  AA     +   BB  ->   CC   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+        with g.suppose([g.atom('AA'), g.atom('BB')]):
+            self.assertEqual(g.eval(g.atom('CC')), T)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+
+    def test_or_entails_atom(self):
+        g = Graph()
+        parse_rule(g, "  AA     |   BB  ->   CC   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('CC')), T)
+        with g.suppose([g.atom('AA'), g.atom('BB')]):
+            self.assertEqual(g.eval(g.atom('CC')), T)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+
+    def test_not_entails_atom(self):
+        g = Graph()
+        parse_rule(g, "  !  AA  ->   BB   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('BB')), F)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('BB')), T)
+
+    def test_and_not_entails_atom(self):
+        g = Graph()
+        parse_rule(g, "  AA     +  !BB  ->   CC   ")
+        with g.suppose([g.atom('AA')]):
+            self.assertEqual(g.eval(g.atom('CC')), T)
+        with g.suppose([g.atom('AA'), g.atom('BB')]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
+        with g.suppose([]):
+            self.assertEqual(g.eval(g.atom('CC')), F)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,10 +1,13 @@
-import node as n
-import graph as g
+import node as node
+import graph as graph
+from pushback_iter import pushback_iter
+
 
 """
 Grammar
-    Session                = Rules Statements Queries Session
+    Sessions            = Session Sessions
                         | EOF
+    Session             = Rules Statements Queries
     Rules               = Rule Rules
                         | NotRule
     Statements          = Statement Statements
@@ -20,12 +23,14 @@ Grammar
     Statement           = ASSERT AtomList
     Query               = QUERY ExpressionList
 
-    Expr                = NotExpr
-    NotExpr             = NOT Expr
+    Expr                = XorExpr
+    XorExpr             = Expr XOR Expr
                         | OrExpr
     OrExpr              = Expr OR Expr
                         | AndExpr
     AndExpr             = Expr AND Expr
+                        | AtomExpr
+    NotExpr             = NOT AtomExpr
                         | AtomExpr
     AtomExpr            = LPAREN Expr RPAREN
                         | Atom
@@ -40,18 +45,21 @@ Grammar
                         | NULL
     SeparatedAtomList   = Atom LIST_SEPARATOR SeparatedAtomList
                         | NULL
-
-The following terminals must be defined
-    NEWLINE         \n
-    ENTAILS         ->
-    ASSERT          =
-    QUERY           ?
-    AND             +
-    OR              |
-    XOR             ^
-    NOT             !
-    LIST_SEPARATOR  ,
 """
+
+terminals = {
+    "NEWLINE":          "\n",
+    "ENTAILS":          "->",
+    "ASSERT":           "=",
+    "QUERY":            "?",
+    "AND":              "+",
+    "OR":               "|",
+    "XOR":              "^",
+    "NOT":              "!",
+    "LIST_SEPARATOR":   ",",
+    "LPAREN":           "(",
+    "RPAREN":           ")",
+}
 
 def execute_file(filename):
     """
@@ -59,41 +67,116 @@ def execute_file(filename):
         parse rules
         parse 
     """
+    g = graph.Graph()
+    with open(filename, 'r') as file:
+        pb_file = pushback_iter(file)
+        execute_session(g, pb_file)
+
+def execute_session(g, file):
+    """
+    Read rules and add to the graph
+    Read statements and close the graph
+    Execute queries and reset the graph
+    Execute a session from the file
+    """
+    parse_rules(g, file)
+    # print(g.eval(g.atom('B'), [g.atom('A')]))
+    # statements = parse_statements(g, file)
+    # with g.suppose(statements):
+    #     for query in parse_queries(g, file):
+    #         print("{}: {}".format(query, g.eval(query)))
+
+def parse_rules(g, file):
+    for line in file:
+        # print(">", line)
+        if parse_rule(g, line):
+            continue
+        file.push(line) #TODO: write me
+        return
+
+def parse_rule(g, line):
+    if terminals["ENTAILS"] in line:
+        l, r = map(lambda s: s.strip(), line.split(terminals["ENTAILS"]))
+        g.entails(parse_expr(g, l, True), parse_expr(g, r, False))
+        return True
+    return False
+
+def parse_statements(g, file):
     pass
 
-def execute_interactive():
+def parse_queries(g, file):
     pass
 
-def parse_line(graph, line):
-    """Parse a line of input and update the graph"""
-    pass
-
-def parse_rule(graph, line):
-    """Parse a rule and add call graph.entails"""
-    pass
-
-def parse_statement(graph, line):
+def parse_statement(g, line):
     """Parse statement facts and close the graph"""
     pass
 
-def parse_query(graph, line):
+def parse_query(g, line):
     """Parse query and print the result"""
     pass
 
-def parse_expr(graph, s):
-    pass
+def parse_expr(g, s, is_input):
+    return parse_xor_expr(g, s, is_input)
 
-def parse_not_expr(graph, s):
-    pass
+def split(s, token):
+    """
+    split s into two stripped strings at the first-non parenthesized occurence of c
+    Returns:
+        str, str or None, None if c does not occur in s outside parentheses
+    """
+    paren_level = 0
+    for i, c in enumerate(s):
+        if c == terminals['LPAREN']:
+            paren_level += 1
+            while s[i] != terminals['RPAREN']:
+                i += 1
+        elif c == terminals['RPAREN']:
+            paren_level -= 1
+            if paren_level < 0:
+                raise SyntaxError('Unmatched RPAREN')
+        elif paren_level == 0 and s[i:i+len(token)] == token:
+            return s[:i].strip(), s[i+len(token):].strip()
+    if paren_level != 0:
+        raise SyntaxError('Unmatched LPAREN')
+    return None, None
 
-def parse_xor_expr(graph, s):
-    pass
+def parse_xor_expr(g, s, is_input):
+    l, r = split(s, terminals["XOR"])
+    if not l:
+        return parse_or_expr(g, s, is_input)
+    return (node.IXor if is_input else node.OXor)(parse_expr(g, l, is_input), parse_expr(g, r, is_input))
 
-def parse_or_expr(graph, s):
-    pass
+def parse_or_expr(g, s, is_input):
+    l, r = split(s, terminals["OR"])
+    if not l:
+        return parse_and_expr(g, s, is_input)
+    return (node.IOr if is_input else node.OOr)(parse_expr(g, l, is_input), parse_expr(g, r, is_input))
 
-def parse_and_expr(graph, s):
-    pass
+def parse_and_expr(g, s, is_input):
+    l, r = split(s, terminals["AND"])
+    if not l:
+        return parse_not_expr(g, s, is_input)
+    return (node.IAnd if is_input else node.OAnd)(parse_expr(g, l, is_input), parse_expr(g, r, is_input))
 
-def parse_atom_expr(graph, s):
-    pass
+def parse_not_expr(g, s, is_input):
+    l, r = split(s, terminals["NOT"])
+    if r:
+        return (node.INot if is_input else node.ONot)(parse_expr(g, r, is_input))
+    return parse_atom_expr(g, s, is_input)
+
+def parse_atom_expr(g, s, is_input):
+    if s[0] == terminals['LPAREN']:
+        if s[-1] != terminals['RPAREN']:
+            raise SyntaxError('Unmatched LPAREN')
+        return parse_expr(s[1:-2])
+    if (len(s) == 0):
+        raise SyntaxError('Empty Atom')
+    a = s.split()
+    if (len(a) > 1):
+        raise SyntaxError('Unexpected Atom: {}'.format(a))
+    if not a[0].isalnum():
+        raise SyntaxError('Invalid character in Atom: {}'.format(a[0]))
+    return g.atom(a[0].strip())
+
+if __name__ == '__main__':
+    execute_file('a.exp')
