@@ -397,9 +397,14 @@ class TestSplit(unittest.TestCase):
         split("((())())", "a")
 
 class TestParseRule(unittest.TestCase):
+    def test_return_value(self):
+        g = Graph()
+        self.assertFalse(parse_rule(g, "=ABC"))
+        self.assertTrue(parse_rule(g, "A->B"))
+
     def test_atom_entails_atom(self):
         g = Graph()
-        parse_rule(g, "  AA  ->   BB   ")
+        parse_rule(g, "  AA->BB   ")
         self.assertEqual(g.eval(g.atom('BB'), [g.atom('AA')]), T)
         self.assertRaises(SyntaxError, lambda: parse_rule(g, "  A A  ->   BB   "))
 
@@ -482,6 +487,40 @@ class TestParseRule(unittest.TestCase):
             self.assertEqual(g.eval(g.atom('CC')), F)
         with g.suppose([]):
             self.assertEqual(g.eval(g.atom('CC')), F)
+
+class TestParseStatement(unittest.TestCase):
+    def test_not_a_statement(self):
+        g = Graph()
+        self.assertIsNone(parse_statement(g, "ABC"))
+
+    def test_compact_atom_list(self):
+        g = Graph()
+        self.assertEqual(parse_statement(g, "=A       BC"), [
+            g.atom('A'), g.atom('B'), g.atom('C')
+        ])
+
+    def test_separated_atom_list(self):
+        g = Graph()
+        self.assertEqual(parse_statement(g, "=A, B,  C"), [
+            g.atom('A'), g.atom('B'), g.atom('C')
+        ])
+
+class TestParseQuery(unittest.TestCase):
+    def test_not_a_query(self):
+        g = Graph()
+        self.assertIsNone(parse_query(g, "ABC"))
+
+    def test_compact_atom_list(self):
+        g = Graph()
+        self.assertEqual(parse_query(g, "?A       BC"), [
+            g.atom('A'), g.atom('B'), g.atom('C')
+        ])
+
+    def test_separated_atom_list(self):
+        g = Graph()
+        self.assertEqual(parse_query(g, "?A, B,  C"), [
+            g.atom('A'), g.atom('B'), g.atom('C')
+        ]) 
 
 if __name__ == "__main__":
     unittest.main()

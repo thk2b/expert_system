@@ -20,6 +20,8 @@ class Node:
 class Atom(Node):
     def __init__(self, name, graph, tv=INDETERMINATE):
         super().__init__()
+        if not name.isalnum():
+            raise SyntaxError('Invalid atom name: {}'.format(name))
         self.original_tv = tv if tv is not INDETERMINATE else None
         self.tv = tv
         self.name = name

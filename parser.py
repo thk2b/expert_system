@@ -1,7 +1,7 @@
 import node as node
 import graph as graph
 from pushback_iter import pushback_iter
-
+import collections
 
 """
 Grammar
@@ -38,6 +38,7 @@ Grammar
 
     ExpressionList      = Expression
                         | Expression LIST_SEPARATOR ExpressionList
+                        | AtomList
                         | NULL
     AtomList            = CompactAtomList
                         | SeparatedAtomList
@@ -80,18 +81,16 @@ def execute_session(g, file):
     Execute a session from the file
     """
     parse_rules(g, file)
-    # print(g.eval(g.atom('B'), [g.atom('A')]))
-    # statements = parse_statements(g, file)
-    # with g.suppose(statements):
-    #     for query in parse_queries(g, file):
-    #         print("{}: {}".format(query, g.eval(query)))
+    statements = parse_statements(g, file)
+    with g.suppose(statements):
+        for query in parse_queries(g, file):
+            print("{}: {}".format(query, g.eval(query)))
 
 def parse_rules(g, file):
     for line in file:
-        # print(">", line)
         if parse_rule(g, line):
             continue
-        file.push(line) #TODO: write me
+        file.push(line)
         return
 
 def parse_rule(g, line):
@@ -102,18 +101,44 @@ def parse_rule(g, line):
     return False
 
 def parse_statements(g, file):
-    pass
+    statements = collections.deque()
+    for line in file:
+        statement_list = parse_statement(g, line)
+        if statement:
+            statements.append(*statement_list)
+        else:
+            file.push(line)
+    return statements
 
 def parse_queries(g, file):
-    pass
+    for line in file:
+        query = parse_query(g, line)
+        if query is None:
+            file.push(line)
+            break
+        for expr in query:
+            yield expr
 
 def parse_statement(g, line):
-    """Parse statement facts and close the graph"""
-    pass
+    """Parse statement facts"""
+    line = line.strip()
+    if line[0] != terminals['ASSERT']:
+        return None
+    return parse_atom_list(g, line[1:])
+
+def parse_atom_list(g, line):
+    if terminals['LIST_SEPARATOR'] in line:
+        return [
+            g.atom(name.strip()) for name in line.split(terminals['LIST_SEPARATOR'])
+        ]
+    return [g.atom(name) for name in list(line.strip()) if name != ' ']
 
 def parse_query(g, line):
-    """Parse query and print the result"""
-    pass
+    """Parse query"""
+    line = line.strip()
+    if line[0] != terminals['QUERY']:
+        return None
+    return parse_atom_list(g, line[1:]) # TODO: also handle expressions
 
 def parse_expr(g, s, is_input):
     return parse_xor_expr(g, s, is_input)
