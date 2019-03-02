@@ -70,14 +70,16 @@ class Graph:
             add node to graph and evaluate
         """
         self.close(facts)
-        return n.eval(verbose=verbose)
+        return n.eval(None, verbose=verbose)
 
     def reset(self):
         """
         Reset facts to their orignial truth value or indeterminate
         """
-        for atom in self.atoms.values():
-            atom.tv = atom.original_tv or node.INDETERMINATE
+        for atom in self.atoms.values():# TODO: Atom.reset()
+            atom.tv = atom.original_tv if atom.original_tv is not None else node.INDETERMINATE
+            if atom.tv_reason:
+                atom.tv_reason = None
         self.closed = False
 
     def suppose(self, facts=[]):

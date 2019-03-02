@@ -25,38 +25,40 @@ class Atom(Node):
             raise SyntaxError('Invalid atom name: {}'.format(name))
         self.original_tv = tv if tv is not INDETERMINATE else None
         self.tv = tv
+        self.tv_reason = None
         self.name = name
         self.graph = graph
         self.inputs = []
         self.outputs = []
 
-    def print(self, verbose=False, conclude=True):
-        if verbose:
-            if conclude:
-                print("so {} is {}".format(self, tv_to_str(self.tv)))
-            else:
-                print("{} is {}".format(self, tv_to_str(self.tv)))
-
     def eval(self, child=None, verbose=False):
         if self.tv != INDETERMINATE:
-            self.print(verbose, conclude=False)
+            if verbose:
+                if self.tv_reason:
+                    print("{} is {} because {}".format(self, tv_to_str(self.tv), self.tv_reason))
+                else:
+                    print("{} is {}".format(self, tv_to_str(self.tv)))
             return self.tv
         all_indeterminate = True
         for i in self.inputs:
             if i.skip:
                 continue
-            tv = i.eval(self, verbose)
+            tv = i.eval(self)
             if tv != INDETERMINATE:
                 all_indeterminate = False
             if tv == TRUE:
                 self.tv = TRUE
-                self.print(verbose)
+                if verbose:
+                    self.tv_reason = "{} is {}".format(i, tv_to_str(self.tv))
+                    print("{} is {} because {}".format(
+                        self, tv_to_str(self.tv), self.tv_reason))
                 return TRUE
         if all_indeterminate:
             self.tv = INDETERMINATE
         else:
             self.tv = FALSE
-        self.print(verbose)
+        if verbose:
+            print("{} is {}".format(self, tv_to_str(self.tv)))
         return self.tv
 
     def __str__(self):
@@ -73,9 +75,16 @@ class INot(Node):
         self.output = None
 
     def eval(self, child=None, verbose=False):
-        tv = self.input.eval(self, verbose)
+        tv = self.input.eval(self)
         if tv != INDETERMINATE:
-            return T if tv is F else F
+            out_tv = T if tv is F else F
+            if verbose:
+                print('{} is {} because {} is {}'.format(
+                    self, tv_to_str(out_tv), self.input, tv_to_str(tv)))
+            return out_tv
+        if verbose:
+            print('{} is {} because {} is {}'.format(
+                self, tv_to_str(INDETERMINATE), self.input, tv_to_str(INDETERMINATE)))
         return INDETERMINATE
 
     def __str__(self):
@@ -95,17 +104,15 @@ class IAnd(BinaryInputNode):
         for i in (self.i1, self.i2):
             if i.skip:
                 continue
-            tv = i.eval(self, verbose)
-            if tv == INDETERMINATE:
+            tv = i.eval(self)
+            if tv != TRUE:
                 if verbose:
-                    print('so {} is indeterminate'.format(self))
-                return INDETERMINATE
-            if tv == FALSE:
-                if verbose:
-                    print('so {} is false'.format(self))
-                return FALSE
+                    print('{} is {} because {} is {}'.format(
+                        self, tv_to_str(FALSE), i, tv_to_str(tv)))
+                return tv
         if verbose:
-            print('so {} is true'.format(self))
+            print('{} is {} because {} and {} are true'.format(
+                self, tv_to_str(TRUE), self.i1, self.i2))
         return TRUE
 
     def __str__(self):
@@ -117,9 +124,15 @@ class IOr(BinaryInputNode):
         for i in (self.i1, self.i2):
             if i.skip:
                 continue
-            tv = i.eval(self, verbose)
+            tv = i.eval(self)
             if tv == TRUE:
+                if verbose:
+                    print('{} is {} because {} is {}'.format(
+                        self, tv_to_str(TRUE), i, tv_to_str(TRUE)))
                 return TRUE
+        if verbose:
+            print('{} is {} because {} is {}'.format(
+                self, tv_to_str(FALSE), i, tv_to_str(tv)))
         return FALSE
 
     def __str__(self):
@@ -127,14 +140,25 @@ class IOr(BinaryInputNode):
 
 class IXor(BinaryInputNode):
     def eval(self, child=None, verbose=False):
-        for i in (self.i1, self.i2):
-            if i.skip:
-                continue
-            tv = i.eval(self, verbose)
-            if tv == INDETERMINATE:
-                return INDETERMINATE
-        if self.i1.tv == self.i2.tv:
+        tv1 = self.i1.eval() if not self.i1.skip else FALSE
+        tv2 = self.i2.eval() if not self.i2.skip else FALSE
+        if tv1 == INDETERMINATE or tv2 == INDETERMINATE:
+            if verbose:
+                print('{} is {} because {} is {}'.format(
+                    self, tv_to_str(tv),
+                    self.i1 if tv1 == INDETERMINATE else self.i2,
+                    tv_to_str(tv)))
+            return INDETERMINATE
+        if tv1 == tv2:
+            if verbose:
+                print('{} is {} because {} and {} are {}'.format(
+                    self, tv_to_str(FALSE), tv1, tv2, tv_to_str(tv1)))
             return FALSE
+        if verbose:
+            print('{} is {} because {} is {} and {} is {}'.format(
+                self, tv_to_str(TRUE),
+                tv1, tv_to_str(tv1),
+                tv2, tv_to_str(tv1)))
         return TRUE
 
     def __str__(self):
@@ -151,7 +175,7 @@ class ONot(Node):
         self.input = None
 
     def eval(self, child=None, verbose=False):
-        tv = self.input.eval(self, verbose)
+        tv = self.input.eval(self)
         if tv == TRUE: #negate input only if node is true
             return FALSE
         return tv
@@ -172,7 +196,7 @@ class BinaryOutputNode(Node):
 
 class OAnd(BinaryOutputNode):
     def eval(self, child, verbose=False):
-        return self.input.eval(self, verbose)
+        return self.input.eval(self)
 
 class OOr(BinaryOutputNode):
     def eval(self, child, verbose=False):
@@ -180,14 +204,14 @@ class OOr(BinaryOutputNode):
             raise ValueError("Child {} is not an output node".format(child))
         if child is None:
             return INDETERMINATE
-        tv = self.input.eval(self, verbose)
+        tv = self.input.eval(self)
         if tv != TRUE:
             if isinstance(child, Atom):
                 child.tv = tv
             return tv
         other = self.o1 if child is self.o2 else self.o2
         self.skip = True
-        other_tv = other.eval(None, verbose)
+        other_tv = other.eval(None)
         self.skip = False
         if other_tv == FALSE:
             child.tv = TRUE
@@ -202,14 +226,14 @@ class OXor(BinaryOutputNode):
             raise ValueError("Child {} is not an output node".format(child))
         if child is None:
             return INDETERMINATE
-        tv = self.input.eval(self, verbose)
+        tv = self.input.eval(self)
         if tv == INDETERMINATE:
             if isinstance(child, Atom):
                 child.tv = INDETERMINATE
             return INDETERMINATE
         other = self.o1 if child is self.o2 else self.o2
         self.skip = True
-        other_tv = other.eval(None, verbose)
+        other_tv = other.eval(None)
         self.skip = False
         if other_tv == INDETERMINATE:
             child.tv = INDETERMINATE

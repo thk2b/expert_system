@@ -51,10 +51,10 @@ def execute_session(g, file, verbose=False):
         for query in parser.parse_queries(g, file):
             got_query = True
             tv = tv_to_str(g.eval(query, verbose=verbose))
-            if verbose:
-                print("therefore {} is {}".format(query, tv))
-            else:
+            if not verbose:
                 print("{}: {}".format(query, tv))
+            # else:
+            #     print('{} is {}'.format(query, tv))
     if not len(statements) and not got_query:
         raise SyntaxError('Invalid statement, expected rule, {}, or {}'.format(parser.terminals['ASSERT'], parser.terminals['QUERY']))
 

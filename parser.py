@@ -32,8 +32,7 @@ Grammar
                         | Atom
     Atom                = <NAME>
 
-    ExpressionList      = Expression
-                        | Expression LIST_SEPARATOR ExpressionList
+    ExpressionList      | Expression LIST_SEPARATOR ExpressionList
                         | AtomList
                         | NULL
     AtomList            = CompactAtomList
@@ -104,7 +103,16 @@ def parse_statement(g, line):
     line = line.strip()
     if line[0] != terminals['ASSERT']:
         return None
-    return parse_atom_list(g, line[1:])
+    return parse_expr_list(g, line[1:], False)
+
+def parse_expr_list(g, line, is_input):
+    if terminals['LIST_SEPARATOR'] in line:
+        return [
+            parse_expr(g, expr_str, is_input)
+            for expr_str in map(lambda s: s.strip(), line.split(terminals['LIST_SEPARATOR']))
+            if len(expr_str)
+        ]
+    return [g.atom(name) for name in list(line.strip()) if name != ' '] 
 
 def parse_atom_list(g, line):
     if terminals['LIST_SEPARATOR'] in line:
@@ -118,7 +126,7 @@ def parse_query(g, line):
     line = line.strip()
     if line[0] != terminals['QUERY']:
         return None
-    return parse_atom_list(g, line[1:]) # TODO: also handle expressions
+    return parse_expr_list(g, line[1:], True) # TODO: also handle expressions
 
 def parse_expr(g, s, is_input):
     return parse_xor_expr(g, s, is_input)
