@@ -27,7 +27,7 @@ def execute_interactive(verbose=False):
         except EOFError:
             break
         except Exception as e:
-            print('ERROR: ', e) #FIXME: Make sure errors don't mess up the graph
+            print('ERROR: ', e)
 
 def execute_sessions(g, file, interactive=False, verbose=False):
     pb_file = pushback_iter(preprocess_iter(file, PROMPT if interactive else None))
@@ -53,8 +53,6 @@ def execute_session(g, file, verbose=False):
             tv = tv_to_str(g.eval(query, verbose=verbose))
             if not verbose:
                 print("{}: {}".format(query, tv))
-            # else:
-            #     print('{} is {}'.format(query, tv))
     if not len(statements) and not got_query:
         raise SyntaxError('Invalid statement, expected rule, {}, or {}'.format(parser.terminals['ASSERT'], parser.terminals['QUERY']))
 

@@ -126,7 +126,7 @@ def parse_query(g, line):
     line = line.strip()
     if line[0] != terminals['QUERY']:
         return None
-    return parse_expr_list(g, line[1:], True) # TODO: also handle expressions
+    return parse_expr_list(g, line[1:], True)
 
 def parse_expr(g, s, is_input):
     return parse_xor_expr(g, s, is_input)
