@@ -64,13 +64,13 @@ class Graph:
             if len(atom.inputs) == 0 and atom.tv == node.INDETERMINATE:
                 atom.tv = node.FALSE
 
-    def eval(self, n, facts=[]):
+    def eval(self, n, facts=[], verbose=False):
         """
         Evaluate the truth value of node
             add node to graph and evaluate
         """
         self.close(facts)
-        return n.eval()
+        return n.eval(verbose=verbose)
 
     def reset(self):
         """
