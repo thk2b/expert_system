@@ -263,7 +263,7 @@ class TestGraph(unittest.TestCase):
         g = make_graph()
         self.assertEqual(g.eval(g.atom('A'), [g.atom('B')]), T)
         g = make_graph()
-        self.assertEqual(g.eval(g.atom('A'), [g.atom('C')]), F) # B is marked as false, was indeterminate
+        self.assertEqual(g.eval(g.atom('A'), [g.atom('C')]), T) # B is marked as false, was indeterminate
         g = make_graph()
         self.assertEqual(g.eval(g.atom('A'), [g.atom('B'), g.atom('C')]), T)
 
@@ -459,8 +459,8 @@ class TestParseRule(unittest.TestCase):
         parse_rule(g, "  AA     ->   !  CC   ")
         with g.suppose([g.atom('AA')]):
             self.assertEqual(g.eval(g.atom('BB')), T)
-        with g.suppose([]):
-            self.assertEqual(g.eval(g.atom('CC')), F)
+        with g.suppose():
+            self.assertEqual(g.eval(g.atom('CC')), T)
 
     def test_not_entails_not(self):
         g = Graph()
@@ -495,7 +495,7 @@ class TestParseStatement(unittest.TestCase):
 
     def test_empty_statement(self):
         g = Graph()
-        self.assertIsNone(parse_statement(g, "="))
+        self.assertEqual(parse_statement(g, "="), [])
 
     def test_compact_atom_list(self):
         g = Graph()

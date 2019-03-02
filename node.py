@@ -32,14 +32,21 @@ class Atom(Node):
     def eval(self, child=None):
         if self.tv != INDETERMINATE:
             return self.tv
+        all_indeterminate = True
         for i in self.inputs:
             if i.skip:
                 continue
             tv = i.eval(self)
             if tv != INDETERMINATE:
-                self.tv = tv
-                return self.tv
-        return INDETERMINATE
+                all_indeterminate = False
+            if tv == TRUE:
+                self.tv = TRUE
+                return TRUE
+        if all_indeterminate:
+            self.tv = INDETERMINATE
+        else:
+            self.tv = FALSE
+        return self.tv
 
     def __str__(self):
         return "Atom({})[{}]".format(self.name, TV_TABLE[self.tv])
