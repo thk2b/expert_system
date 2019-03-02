@@ -103,7 +103,7 @@ def parse_statement(g, line):
     line = line.strip()
     if line[0] != terminals['ASSERT']:
         return None
-    return parse_expr_list(g, line[1:], False)
+    return parse_atom_list(g, line[1:])
 
 def parse_expr_list(g, line, is_input):
     if terminals['LIST_SEPARATOR'] in line:

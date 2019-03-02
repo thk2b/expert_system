@@ -152,13 +152,13 @@ class IXor(BinaryInputNode):
         if tv1 == tv2:
             if verbose:
                 print('{} is {} because {} and {} are {}'.format(
-                    self, tv_to_str(FALSE), tv1, tv2, tv_to_str(tv1)))
+                    self, tv_to_str(FALSE), self.i1, self.i2, tv_to_str(tv1)))
             return FALSE
         if verbose:
             print('{} is {} because {} is {} and {} is {}'.format(
                 self, tv_to_str(TRUE),
-                tv1, tv_to_str(tv1),
-                tv2, tv_to_str(tv1)))
+                self.i1, tv_to_str(tv1),
+                self.i2, tv_to_str(tv1)))
         return TRUE
 
     def __str__(self):
@@ -197,6 +197,9 @@ class BinaryOutputNode(Node):
 class OAnd(BinaryOutputNode):
     def eval(self, child, verbose=False):
         return self.input.eval(self)
+    
+    def __str__(self):
+        return '({} and {})'.format(self.o1, self.o2)
 
 class OOr(BinaryOutputNode):
     def eval(self, child, verbose=False):
@@ -219,6 +222,9 @@ class OOr(BinaryOutputNode):
         if isinstance(child, Atom):
             child.tv = INDETERMINATE
         return INDETERMINATE
+
+    def __str__(self):
+        return '({} or {})'.format(self.o1, self.o2)
 
 class OXor(BinaryOutputNode):
     def eval(self, child, verbose=False):
@@ -252,3 +258,6 @@ class OXor(BinaryOutputNode):
         if isinstance(child, Atom):
             child.tv = FALSE
         return FALSE
+
+    def __str__(self):
+        return '({} or {})'.format(self.o1, self.o2)
