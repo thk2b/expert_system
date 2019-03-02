@@ -3,7 +3,11 @@ class strip_comment_iter:
         self.it = it
 
     def __next__(self):
-       return next(self.it).split('#', 1)[0]
+        while True:
+            s = next(self.it).split('#', 1)[0].strip()
+            if len(s):
+                break
+        return s
 
     def __iter__(self):
         return self

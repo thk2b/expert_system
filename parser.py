@@ -111,7 +111,8 @@ def parse_statements(g, file):
     for line in file:
         statement_list = parse_statement(g, line)
         if statement_list:
-            statements.append(*statement_list)
+            for statement in statement_list:
+                statements.append(statement)
         else:
             file.push(line)
             return statements
