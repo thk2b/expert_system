@@ -1,4 +1,48 @@
-a -> b
+A | B + C -> E 
 
-=
-?a
+=A
+?E 
+
+=B
+?E
+
+=C
+?E
+
+=AC
+?E
+
+=BC
+?E
+
+# With =, E should be false. 
+
+# With =A, E should be true. 
+# With =B, E should be false. 
+# With =C, E should be false. 
+# With =AC, E should be false.  TRUE!!
+# With =BC, E should be true. 
+
+(F | G) + H -> E 
+
+=F
+?E
+
+=G
+?E
+
+=H
+?E
+
+=FH
+?E
+
+=GH
+?E
+
+
+# With =F, E should be false. 
+# With =G, E should be false. 
+# With =H, E should be false. 
+# With =FH, E should be true. 
+# With =GH, E should be true. 

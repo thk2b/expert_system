@@ -110,7 +110,7 @@ def parse_statements(g, file):
     statements = collections.deque()
     for line in file:
         statement_list = parse_statement(g, line)
-        if statement_list:
+        if statement_list is not None:
             for statement in statement_list:
                 statements.append(statement)
         else:
