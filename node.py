@@ -141,7 +141,6 @@ class IXor(BinaryInputNode):
         return "({} xor {})".format(str(self.i1), str(self.i2))
 
 class ONot(Node):
-    """Represents a not node in the knowledge graph"""
     def __init__(self, output_node):
         super().__init__()
         if isinstance(output_node, Atom):
@@ -153,9 +152,9 @@ class ONot(Node):
 
     def eval(self, child=None, verbose=False):
         tv = self.input.eval(self, verbose)
-        if tv != INDETERMINATE:
-            return T if tv is F else F
-        return INDETERMINATE
+        if tv == TRUE: #negate input only if node is true
+            return FALSE
+        return tv
 
 class BinaryOutputNode(Node):
     """

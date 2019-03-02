@@ -7,7 +7,7 @@ from node import tv_to_str
 
 PROMPT = 'e> '
 
-def execute_file(filename):
+def execute_file(filename, verbose):
     """
     Parse a file and execute queries
         parse rules
@@ -15,7 +15,7 @@ def execute_file(filename):
     """
     g = graph.Graph()
     with open(filename, 'r') as file:
-        execute_sessions(g, file)
+        execute_sessions(g, file, verbose)
 
 def execute_interactive():
     g = graph.Graph()

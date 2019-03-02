@@ -115,7 +115,7 @@ class TestGraph(unittest.TestCase):
         g = make_graph(T)
         self.assertEqual(g.eval(g.atom('C')), F)
         g = make_graph(F)
-        self.assertEqual(g.eval(g.atom('C')), T)
+        self.assertEqual(g.eval(g.atom('C')), F)
 
     def test_or_as_concequent(self):
         def make_graph(a=I, b=I, c=I):
@@ -309,7 +309,7 @@ class TestGraph(unittest.TestCase):
         g = make_graph()
         self.assertEqual(g.eval(g.atom('C')), F)
         g = make_graph()
-        self.assertEqual(g.eval(g.atom('C'), [g.atom('A'), g.atom('B')]), T)
+        self.assertEqual(g.eval(g.atom('C'), [g.atom('A'), g.atom('B')]), F)
         g = make_graph()
         self.assertEqual(g.eval(g.atom('C'), [g.atom('A')]), F)
     
@@ -373,6 +373,28 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('B')]), T)
         g = Graph()
         self.assertEqual(g.eval(IXor(g.atom('A'), g.atom('B')), [g.atom('A'), g.atom('B')]), F)
+
+    def test_entails_not(self):
+        def make_graph():
+            g = Graph()
+            g.entails(
+                g.atom('A'),
+                ONot(g.atom('C'))
+            )
+            return g
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('C'), []), F)
+
+    def test_and_entails_not(self):
+        def make_graph():
+            g = Graph()
+            g.entails(
+                IAnd(g.atom('A'), g.atom('B')),
+                ONot(g.atom('C'))
+            )
+            return g
+        g = make_graph()
+        self.assertEqual(g.eval(g.atom('C'), [g.atom('A')]), F)
 
 class TestSplit(unittest.TestCase):
     def test_basic(self):
@@ -460,13 +482,13 @@ class TestParseRule(unittest.TestCase):
         with g.suppose([g.atom('AA')]):
             self.assertEqual(g.eval(g.atom('BB')), T)
         with g.suppose():
-            self.assertEqual(g.eval(g.atom('CC')), T)
+            self.assertEqual(g.eval(g.atom('CC')), F)
 
     def test_not_entails_not(self):
         g = Graph()
         parse_rule(g, "  !  AA  ->   ! BB   ")
         with g.suppose([g.atom('AA')]):
-            self.assertEqual(g.eval(g.atom('BB')), T)
+            self.assertEqual(g.eval(g.atom('BB')), F)
         with g.suppose([]):
             self.assertEqual(g.eval(g.atom('BB')), F)
 

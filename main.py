@@ -8,7 +8,7 @@ def main(args):
         return execute_interactive()
     for filename in args.filenames:
         print(filename, end=':\n')
-        execute_file(filename)
+        execute_file(filename, args.verbose)
         print()
     pass
 
