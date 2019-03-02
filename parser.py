@@ -90,7 +90,7 @@ def parse_statements(g, file):
                 statements.append(statement)
         else:
             file.push(line)
-            return statements if got_valid_statement else None
+            return statements if got_valid_statement else []
     raise EOFError()
 
 def parse_queries(g, file):

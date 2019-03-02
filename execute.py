@@ -46,8 +46,6 @@ def execute_session(g, file, verbose=False):
     """
     parser.parse_rules(g, file)
     statements = parser.parse_statements(g, file)
-    if statements is None:
-        raise SyntaxError('Invalid statement, expected rule or {}'.format(parser.terminals['ASSERT']))
     got_query = False
     with g.suppose(statements):
         for query in parser.parse_queries(g, file):
@@ -57,6 +55,8 @@ def execute_session(g, file, verbose=False):
                 print("therefore {} is {}".format(query, tv))
             else:
                 print("{}: {}".format(query, tv))
+    if not len(statements) and not got_query:
+        raise SyntaxError('Invalid statement, expected rule, {}, or {}'.format(parser.terminals['ASSERT'], parser.terminals['QUERY']))
 
 if __name__ == '__main__':
     execute_file('a.exp')

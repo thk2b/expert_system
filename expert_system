@@ -10,7 +10,6 @@ def main(args):
         print(filename, end=':\n')
         execute_file(filename, args.verbose)
         print()
-    pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('expert_system')
