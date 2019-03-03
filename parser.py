@@ -15,9 +15,9 @@ Grammar
     Queries             = Query Queries
                         | NULL
 
-    Rule                = Expression ENTAILS Expression
+    Rule                = Expr ENTAILS Expr
     Statement           = ASSERT AtomList
-    Query               = QUERY ExpressionList
+    Query               = QUERY ExprList
 
     Expr                = XorExpr
     XorExpr             = Expr XOR Expr
@@ -32,7 +32,7 @@ Grammar
                         | Atom
     Atom                = <NAME>
 
-    ExpressionList      | Expression LIST_SEPARATOR ExpressionList
+    ExprList      | Expression LIST_SEPARATOR ExprList
                         | AtomList
                         | NULL
     AtomList            = CompactAtomList
