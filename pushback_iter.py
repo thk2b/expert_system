@@ -18,13 +18,3 @@ class pushback_iter:
 
     def push(self, line):
         self.buffer.append(line)
-
-if __name__ == '__main__':
-    again = False
-    with open('a', 'r') as f:
-        i = pushback_iter(f)
-        for line in i:
-            if line[0] == 'd' and not again:
-                again = True
-                i.push(line)
-            print(line, end='')
