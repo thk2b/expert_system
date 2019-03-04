@@ -24,7 +24,7 @@ Run unit tests with `$ python3 test.py`
 
 ```
 $ ./expert_system -v
-e> a -> b # if a then b
+e> a => b # if a then b
 e> =a     # a is true
 e> ?b     # what about b
 b is true because a is true
@@ -33,7 +33,14 @@ e> ?b
 b is false
 ```
 
-TODO: add more examples
+```
+A => B + C
+B => D | E
+C => ! E
+
+=A
+?D # true
+```
 
 ## Syntax
 
@@ -79,7 +86,7 @@ Grammar
 
 terminals = {
     "NEWLINE":          "\n",
-    "ENTAILS":          "->",
+    "ENTAILS":          "=>",
     "ASSERT":           "=",
     "QUERY":            "?",
     "AND":              "+",
