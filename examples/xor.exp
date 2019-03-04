@@ -1,0 +1,24 @@
+#Basic XOR conditions
+
+#The program can handle basic XOR conditions. 
+
+#Example input 1: 
+B + C => A 
+D ^ E => B 
+B => C 
+
+#With =, A should be false. 
+=
+?A
+
+#With =D, A should be true. 
+=D
+?A
+
+#With =E, A should be true. 
+=E
+?A
+
+#With =DE, A should be false.
+=DE
+?A

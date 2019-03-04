@@ -1,4 +1,4 @@
-A | B + C -> E 
+A | B + C => E 
 
 =
 ?E
@@ -26,7 +26,7 @@ A | B + C -> E
 # With =AC, E should be false.  TRUE!!
 # With =BC, E should be true. 
 
-(F | G) + H -> E 
+(F | G) + H => E 
 
 =F
 ?E

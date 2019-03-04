@@ -1,0 +1,17 @@
+# The program can handle or as conclusion
+
+A => B ^ C
+
+=
+?C indeterminate #SHOULD BE FALSE
+
+=A
+?B # indeterminate
+
+=AC
+?B # false
+
+A => !C
+=A
+?B # true, else contradiction
+

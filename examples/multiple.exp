@@ -1,0 +1,17 @@
+#The program can handle multiple rules that have the same conclusion. 
+
+#Example input 1: 
+B => A 
+C => A
+
+=
+?A
+
+=B
+?A
+
+=C
+?A
+
+=BC
+?A

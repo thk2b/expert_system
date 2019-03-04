@@ -1,0 +1,21 @@
+#The program can handle basic OR conditions. 
+
+B + C => A 
+D | E => B 
+B => C 
+
+#With =, A should be false.
+=
+?A
+
+#With =D, A should be true. 
+=D
+?A
+
+#With =E, A should be true. 
+=E
+?A
+
+#With =DE, A should be true. 
+=DE
+?A

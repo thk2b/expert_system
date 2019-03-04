@@ -32,7 +32,7 @@ Grammar
                         | Atom
     Atom                = <NAME>
 
-    ExprList      | Expression LIST_SEPARATOR ExprList
+    ExprList            | Expression LIST_SEPARATOR ExprList
                         | AtomList
                         | NULL
     AtomList            = CompactAtomList
@@ -45,7 +45,7 @@ Grammar
 
 terminals = {
     "NEWLINE":          "\n",
-    "ENTAILS":          "->",
+    "ENTAILS":          "=>",
     "ASSERT":           "=",
     "QUERY":            "?",
     "AND":              "+",
@@ -99,7 +99,6 @@ def parse_queries(g, file):
     raise EOFError()
 
 def parse_statement(g, line):
-    """Parse statement facts"""
     line = line.strip()
     if line[0] != terminals['ASSERT']:
         return None
@@ -122,7 +121,6 @@ def parse_atom_list(g, line):
     return [g.atom(name) for name in list(line.strip()) if name != ' ']
 
 def parse_query(g, line):
-    """Parse query"""
     line = line.strip()
     if line[0] != terminals['QUERY']:
         return None

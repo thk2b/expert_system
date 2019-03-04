@@ -55,6 +55,3 @@ def execute_session(g, file, verbose=False):
                 print("{}: {}".format(query, tv))
     if not len(statements) and not got_query:
         raise SyntaxError('Invalid statement, expected rule, {}, or {}'.format(parser.terminals['ASSERT'], parser.terminals['QUERY']))
-
-if __name__ == '__main__':
-    execute_file('a.exp')

@@ -1,0 +1,51 @@
+#The program can handle parenthesised expressions correctly 
+
+#Example input 1: 
+A | B + C => E 
+(F | G) + H => E 
+
+#With =, E should be false. 
+=
+?E
+
+#With =A, E should be true. 
+=A
+?E
+
+#With =B, E should be false. 
+=B
+?E
+
+#With =C, E should be false. 
+=C
+?E
+
+#With =AC, E should be false. #true actually...
+=AC
+?E
+
+#With =BC, E should be true. 
+=BC
+?E
+
+
+#With =F, E should be false. 
+=F
+?E
+
+#With =G, E should be false. 
+=G
+?E
+
+#With =H, E should be false. 
+=H
+?E
+
+#With =FH, E should be true. 
+=FH
+?E
+
+#With =GH, E should be true. 
+=GH
+?E
+

@@ -1,0 +1,23 @@
+A + !B | C + D => E
+
+=BC
+?E
+
+=A
+?E
+
+=CD
+?E
+
+a + b + c + d + e + f + g => z
+a => b
+a + b => c
+a + b + c => d 
+a + b + c + d => e
+a + b + c + d + e => f
+a + b + c + d + e + f => g
+
+=
+?z
+=a
+?z
