@@ -242,8 +242,9 @@ class OXor(BinaryOutputNode):
         other_tv = other.eval(None)
         self.skip = False
         if other_tv == INDETERMINATE:
-            child.tv = INDETERMINATE
-            return INDETERMINATE
+            if isinstance(child, Atom):
+                child.tv = INDETERMINATE
+            return FALSE
         if tv == TRUE:
             if other_tv == TRUE:
                 if isinstance(child, Atom):
