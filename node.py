@@ -91,9 +91,7 @@ class INot(Node):
         return "not({})".format(str(self.input))
 
 class BinaryInputNode(Node):
-    """
-    InputNode: has 2 inputs, one output
-    """
+    """ InputNode: has 2 inputs, one output """
     def __init__(self, i1, i2, **kwargs):
         super().__init__(**kwargs)
         self.i1, self.i2 = i1, i2
@@ -119,7 +117,6 @@ class IAnd(BinaryInputNode):
         return "({} and {})".format(str(self.i1), str(self.i2))
 
 class IOr(BinaryInputNode):
-    """Represents an or node in the knowledge graph"""
     def eval(self, child=None, verbose=False):
         for i in (self.i1, self.i2):
             if i.skip:
@@ -176,14 +173,12 @@ class ONot(Node):
 
     def eval(self, child=None, verbose=False):
         tv = self.input.eval(self)
-        if tv == TRUE: #negate input only if node is true
+        if tv == TRUE:
             return FALSE
         return tv
 
 class BinaryOutputNode(Node):
-    """
-    OutputNode: has 2 outputs, one input
-    """
+    """OutputNode: has 2 outputs, one input"""
     def __init__(self, o1, o2, **kwargs):
         super().__init__(**kwargs)
         self.o1, self.o2 = o1, o2

@@ -2,13 +2,7 @@ import node
 import error
 
 class Graph:
-    """
-    Represents a knowledge graph
-    """
     def __init__(self):
-        """
-        Initalize graph with nodes
-        """
         self.atoms = {}
         self.closed = False
 
@@ -33,8 +27,6 @@ class Graph:
     def entails(self, antecedent, concequent):
         """
         Connect antecedent and concequent
-        TODO: Throws AtomNotInGraph if an atom in antecedent or
-            concequent is not part of the graph
         """
         if antecedent is concequent:
             raise ValueError('concequent must be different than antecedent')
