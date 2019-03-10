@@ -19,11 +19,12 @@ class Atom:
             If all inputs are false, then this atom is false
         _outputs: list of dependent atoms.
     """
-    def __init__(self, name):
+    def __init__(self, name, graph=None):
         self.name = name
         self._lazy = False
         self._tv = False
         self._inputs, self._outputs = [], []
+        self._graph = graph
 
     @property
     def tv(self):
@@ -44,7 +45,7 @@ class Atom:
     def add_output(self, o):
         self._outputs.append(o)
 
-    def eval(self):
+    def eval(self, verbose=False):
         """
         Get this atom's truth value.
         If not lazy, Recursively evaluate this atom's truth value based on its inputs
@@ -60,7 +61,12 @@ class Atom:
         self._lazy = True
         return self._tv
 
+    def reset(self):
+        self._tv = False
+        self._lazy = False
+
 class BinaryInputNode(InputNode):
+    """Node with two inputs, two outputs"""
     def __init__(self, i1, i2):
         self.i1, self.i2 = i1, i2
         self.o = None
@@ -77,24 +83,25 @@ class INot(InputNode):
     def add_output(self, o):
         self.o = o
 
-    def eval(self):
+    def eval(self, verbose=False):
         return not self.i.eval()
 
 class IOr(BinaryInputNode):
-    def eval(self):
+    def eval(self, verbose=False):
         return self.i1.eval() or self.i2.eval()
 
 class IAnd(BinaryInputNode):
-    def eval(self):
+    def eval(self, verbose=False):
         return self.i1.eval() and self.i2.eval()
 
 class IXor(BinaryInputNode):
-    def eval(self):
+    def eval(self, verbose=False):
         t1, t2 = self.i1.eval(), self.i2.eval()
         if t1 != t2 and (t1 or t2):
             return True
 
 class BinaryOutputNode(OutputNode):
+    """Node with two outputs, two inputs"""
     def __init__(self, o1, o2):
         self.o1, self.o2 = o1, o2
         self.i = None

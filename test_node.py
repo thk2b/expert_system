@@ -1,6 +1,5 @@
 import unittest
-from node2 import *
-
+from node import *
 
 class TestAtom(unittest.TestCase):
     def test_basic_1(self):
