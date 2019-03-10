@@ -3,7 +3,6 @@ import parser
 import graph
 from pushback_iter import pushback_iter
 from preprocess_iter import preprocess_iter
-from node import tv_to_str
 
 PROMPT = 'e> '
 
@@ -26,8 +25,8 @@ def execute_interactive(verbose=False):
             break
         except EOFError:
             break
-        except Exception as e:
-            print('ERROR: ', e)
+        # except Exception as e:
+            # print('ERROR: ', e)
 
 def execute_sessions(g, file, interactive=False, verbose=False):
     pb_file = pushback_iter(preprocess_iter(file, PROMPT if interactive else None))
@@ -50,7 +49,7 @@ def execute_session(g, file, verbose=False):
     with g.suppose(statements):
         for query in parser.parse_queries(g, file):
             got_query = True
-            tv = tv_to_str(g.eval(query, verbose=verbose))
+            tv = g.eval(query, verbose=verbose)
             if not verbose:
                 print("{}: {}".format(query, tv))
     if not len(statements) and not got_query:

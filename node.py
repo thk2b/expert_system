@@ -45,16 +45,24 @@ class Atom:
     def add_output(self, o):
         self._outputs.append(o)
 
-    def eval(self, verbose=False):
+    def eval(self, verbose=False, skip=None):
         """
         Get this atom's truth value.
         If not lazy, Recursively evaluate this atom's truth value based on its inputs
+        params:
+            verbose: display reasoning
+            skip: None or Node to be skiped. Used by Onodes
         """
         if self._lazy:
             return self._tv
         def eval():
             for i in self._inputs:
-                if i.eval():
+                if skip and i is skip:
+                    continue
+                if isinstance(i, OutputNode):
+                    if i.eval_child(self):
+                        return True
+                elif i.eval():
                     return True
             return False
         self._tv = eval()
@@ -64,6 +72,9 @@ class Atom:
     def reset(self):
         self._tv = False
         self._lazy = False
+
+    def __str__(self):
+        return self.name
 
 class BinaryInputNode(InputNode):
     """Node with two inputs, two outputs"""
@@ -86,13 +97,23 @@ class INot(InputNode):
     def eval(self, verbose=False):
         return not self.i.eval()
 
+    def __str__(self):
+        return "not({})".format(self.i)
+
 class IOr(BinaryInputNode):
     def eval(self, verbose=False):
         return self.i1.eval() or self.i2.eval()
 
+    def __str__(self):
+        return "({} and {})".format(self.i1, self.i2)
+
 class IAnd(BinaryInputNode):
     def eval(self, verbose=False):
         return self.i1.eval() and self.i2.eval()
+
+    def __str__(self):
+        return "({} or {})".format(self.i1, self.i2)
+
 
 class IXor(BinaryInputNode):
     def eval(self, verbose=False):
@@ -100,13 +121,64 @@ class IXor(BinaryInputNode):
         if t1 != t2 and (t1 or t2):
             return True
 
+    def __str__(self):
+        return "({} xor {})".format(self.i1, self.i2)
+
 class BinaryOutputNode(OutputNode):
     """Node with two outputs, two inputs"""
     def __init__(self, o1, o2):
         self.o1, self.o2 = o1, o2
         self.i = None
-        o1.add_output(self)
-        o2.add_output(self)
+        o1.add_input(self)
+        o2.add_input(self)
 
-    def add_input(self, o):
+    def add_input(self, i):
         self.i = i
+
+class ONot(OutputNode):
+    def __init__(self, o):
+        self.o = o
+        self.i = None
+        o.add_input(self)
+
+    def add_input(self, i):
+        self.i = i
+
+    def eval_child(self, child, verbose=False):
+        return not self.i.eval()
+
+    def __str__(self):
+        return "not({})".format(self.i)
+
+class OAnd(BinaryOutputNode):
+    def eval_child(self, child, verbose=False):
+        assert child is self.o1 or child is self.o2
+        if isinstance(self.i, OutputNode):
+            return self.i.eval_child(self)
+        return self.i.eval() # FIXME: what happends when i is an onode?
+
+class OOr(BinaryOutputNode):
+    def eval_child(self, child, verbose=False):
+        assert child is self.o1 or child is self.o2
+        if isinstance(self.i, OutputNode):
+            if not self.i.eval_child(self):
+                return False
+        else:
+            if not self.i.eval():
+                return False
+        other = self.o1 if child is self.o2 else self.o2
+        other_tv = \
+            other.eval_child(self) if isinstance(other, OutputNode) else \
+            other.eval(skip=self)
+        if other_tv is False:
+            return True
+        return False
+
+class OXor(BinaryOutputNode):
+    def eval_child(self, child, verbose=False):
+        assert child is self.o1 or child is self.o2
+        other = self.o1 if child is self.o2 else self.o2
+        other_tv = other.eval(skip=self)
+        if self.i.eval():
+            return not other_tv
+        return other_tv
