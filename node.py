@@ -150,27 +150,23 @@ class ONot(OutputNode):
     def __str__(self):
         return "not({})".format(self.i)
 
+def eval_node(node, child, skip=None):
+    if isinstance(node, OutputNode):
+        return node.eval_child(child)
+    return node.eval(skip=skip)
+
 class OAnd(BinaryOutputNode):
     def eval_child(self, child, verbose=False):
         assert child is self.o1 or child is self.o2
-        if isinstance(self.i, OutputNode):
-            return self.i.eval_child(self)
-        return self.i.eval() # FIXME: what happends when i is an onode?
+        return eval_node(self.i, self)
 
 class OOr(BinaryOutputNode):
     def eval_child(self, child, verbose=False):
         assert child is self.o1 or child is self.o2
-        if isinstance(self.i, OutputNode):
-            if not self.i.eval_child(self):
-                return False
-        else:
-            if not self.i.eval():
-                return False
+        if not eval_node(self.i, self):
+            return False
         other = self.o1 if child is self.o2 else self.o2
-        other_tv = \
-            other.eval_child(self) if isinstance(other, OutputNode) else \
-            other.eval(skip=self)
-        if other_tv is False:
+        if eval_node(other, self, skip=self) is False:
             return True
         return False
 

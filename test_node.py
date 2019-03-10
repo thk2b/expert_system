@@ -148,7 +148,7 @@ class TestOAnd(unittest.TestCase):
         )
         oand.add_input(a)
         a.add_output(oand)
-        self.assertFalse(b.eval())
+        self.assertTrue(b.eval())
 
 class TestOOr(unittest.TestCase):
     def test_basic_1(self):
