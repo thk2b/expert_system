@@ -191,6 +191,8 @@ class BinaryOutputNode(Node):
 
 class OAnd(BinaryOutputNode):
     def eval(self, child, verbose=False):
+        if self.input.skip:
+            return INDETERMINATE
         return self.input.eval(self)
     
     def __str__(self):
@@ -202,6 +204,8 @@ class OOr(BinaryOutputNode):
             raise ValueError("Child {} is not an output node".format(child))
         if child is None:
             return INDETERMINATE
+        if self.input.skip:
+            return INDETERMINATE
         tv = self.input.eval(self)
         if tv != TRUE:
             if isinstance(child, Atom):
@@ -209,7 +213,7 @@ class OOr(BinaryOutputNode):
             return tv
         other = self.o1 if child is self.o2 else self.o2
         self.skip = True
-        other_tv = other.eval(None)
+        other_tv = other.eval(None)#
         self.skip = False
         if other_tv == FALSE:
             child.tv = TRUE
