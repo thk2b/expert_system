@@ -59,7 +59,7 @@ class Atom:
             for i in self._inputs:
                 if skip and i is skip:
                     continue
-                if isinstance(i, OutputNode):
+                if isinstance(i, OutputNode):#FIXME: eval node
                     if i.eval_child(self):
                         return True
                 elif i.eval():
@@ -174,7 +174,7 @@ class OXor(BinaryOutputNode):
     def eval_child(self, child, verbose=False):
         assert child is self.o1 or child is self.o2
         other = self.o1 if child is self.o2 else self.o2
-        other_tv = other.eval(skip=self)
+        other_tv = other.eval(skip=self)#FIXME: eval node
         if self.i.eval():
             return not other_tv
         return other_tv

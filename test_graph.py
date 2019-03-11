@@ -186,6 +186,12 @@ class TestExpressions(unittest.TestCase):
     sessions = [
         ((['a => b'], '=a', '?b'), True),
         ((['a => b'], '=', '?b'), False),
+        ((['a => b | c'], '=a', '?b'), True),
+        ((['a => b ^ c'], '=c', '?b'), True),
+        ((['a => b + c + d'], '=a', '?b'), True),
+        ((['a => b | c | d'], '=', '?b'), False),
+        ((['a => b | c | d'], '=a', '?b'), True),
+        ((['a => b | c | d', 'a => c'], '=a', '?b'), True),
     ]
     def test_run(self):
         for sess, expected in self.sessions:
