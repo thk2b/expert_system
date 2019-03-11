@@ -1,3 +1,8 @@
+def eval_node(node, child, skip=None):
+    if isinstance(node, OutputNode):
+        return node.eval_child(child)
+    return node.eval(skip=skip)
+
 class Node:
     pass
 
@@ -55,17 +60,14 @@ class Atom:
         """
         if self._lazy:
             return self._tv
-        def eval():
+        def do_eval():
             for i in self._inputs:
                 if skip and i is skip:
                     continue
-                if isinstance(i, OutputNode):#FIXME: eval node
-                    if i.eval_child(self):
-                        return True
-                elif i.eval():
+                if eval_node(i, self):
                     return True
             return False
-        self._tv = eval()
+        self._tv = do_eval()
         self._lazy = True
         return self._tv
 
@@ -94,30 +96,38 @@ class INot(InputNode):
     def add_output(self, o):
         self.o = o
 
-    def eval(self, verbose=False):
-        return not self.i.eval()
+    def eval(self, verbose=False, skip=None):
+        if skip and self.i is skip:
+            return False
+        return not eval_node(self.i, self)
 
     def __str__(self):
         return "not({})".format(self.i)
 
 class IOr(BinaryInputNode):
-    def eval(self, verbose=False):
-        return self.i1.eval() or self.i2.eval()
+    def eval(self, verbose=False, skip=None):
+        if skip:
+            return eval_node(self.i1, self) if skip is self.i2 else eval_node(self.i2, self)
+        return eval_node(self.i1, self) or eval_node(self.i2, self)
 
     def __str__(self):
         return "({} and {})".format(self.i1, self.i2)
 
 class IAnd(BinaryInputNode):
-    def eval(self, verbose=False):
-        return self.i1.eval() and self.i2.eval()
+    def eval(self, verbose=False, skip=None):
+        if skip:
+            return eval_node(self.i1, self) if skip is self.i2 else eval_node(self.i2, self)
+        return eval_node(self.i1, self) and eval_node(self.i2, self)
 
     def __str__(self):
         return "({} or {})".format(self.i1, self.i2)
 
 
 class IXor(BinaryInputNode):
-    def eval(self, verbose=False):
-        t1, t2 = self.i1.eval(), self.i2.eval()
+    def eval(self, verbose=False, skip=None):
+        if skip:
+            return eval_node(self.i1, self) if skip is self.i2 else eval_node(self.i2, self)
+        t1, t2 = eval_node(self.i1, self), eval_node(self.i2, self)
         if t1 != t2 and (t1 or t2):
             return True
 
@@ -145,24 +155,21 @@ class ONot(OutputNode):
         self.i = i
 
     def eval_child(self, child, verbose=False):
-        return not self.i.eval()
+        return not eval_node(self.i, self)
 
     def __str__(self):
         return "not({})".format(self.i)
 
-def eval_node(node, child, skip=None):
-    if isinstance(node, OutputNode):
-        return node.eval_child(child)
-    return node.eval(skip=skip)
+
 
 class OAnd(BinaryOutputNode):
     def eval_child(self, child, verbose=False):
-        assert child is self.o1 or child is self.o2
+        # assert child is self.o1 or child is self.o2
         return eval_node(self.i, self)
 
 class OOr(BinaryOutputNode):
     def eval_child(self, child, verbose=False):
-        assert child is self.o1 or child is self.o2
+        # assert child is self.o1 or child is self.o2
         if not eval_node(self.i, self):
             return False
         other = self.o1 if child is self.o2 else self.o2
@@ -172,9 +179,9 @@ class OOr(BinaryOutputNode):
 
 class OXor(BinaryOutputNode):
     def eval_child(self, child, verbose=False):
-        assert child is self.o1 or child is self.o2
+        # assert child is self.o1 or child is self.o2
         other = self.o1 if child is self.o2 else self.o2
-        other_tv = other.eval(skip=self)#FIXME: eval node
-        if self.i.eval():
+        other_tv = eval_node(other, self, self)
+        if eval_node(self.i, self):
             return not other_tv
         return other_tv
