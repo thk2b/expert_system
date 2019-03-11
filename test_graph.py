@@ -183,18 +183,20 @@ class TestParseQuery(unittest.TestCase):
         ])
 
 class TestExpressions(unittest.TestCase):
-    
     sessions = [
-        (('a -> b', '=a', '?b'), True)
-        (('a -> b', '=', '?b'), False)
+        ((['a => b'], '=a', '?b'), True),
+        ((['a => b'], '=', '?b'), False),
     ]
-    def run(self):
+    def test_run(self):
         for sess, expected in self.sessions:
             g = Graph()
-            parse_rules(g, sess[0])
-            parse_statement(g, sess[1])
-            self.assertEqual(g.eval(parse_query(sess[2])), expected)
-            
+            rules, statement, query = sess
+            for rule in rules:
+                parse_rule(g, rule)
+            facts = parse_statement(g, statement)
+            query_node = parse_query(g, query)[0]
+            self.assertEqual(g.eval(query_node, facts), expected,
+                "{} {}".format(' '.join(rules), ' '.join(sess[1:])))
 
 if __name__ == "__main__":
     unittest.main()
