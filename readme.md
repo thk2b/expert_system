@@ -1,6 +1,6 @@
 # expert system
 
-A proposition logic engine
+A propositional logic engine
 
 ## Usage
 
